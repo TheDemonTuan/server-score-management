@@ -41,6 +41,7 @@ func main() {
 		//},
 	})
 
+	//Testing
 	//app.Use(helmet.New())
 	//app.Use(cors.New(cors.Config{
 	//	AllowOrigins:     os.Getenv("CLIENT_URI"),
