@@ -13,5 +13,6 @@ func departmentRouter(r fiber.Router) {
 	departmentRouter.Get("/:id", controllers.DepartmentGetById)
 	departmentRouter.Post("", controllers.DepartmentCreate)
 	departmentRouter.Put("/:id", controllers.DepartmentUpdate)
+	departmentRouter.Delete("/:id", controllers.DepartmentDelete)
 
 }

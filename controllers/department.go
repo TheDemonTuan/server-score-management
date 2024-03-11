@@ -98,3 +98,22 @@ func DepartmentUpdate(c *fiber.Ctx) error {
 
 	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", department))
 }
+
+// [DELETE] /api/department/:id
+func DepartmentDelete(c *fiber.Ctx) error {
+	id := c.Params("id")
+	var department entity.Department
+	err := common.DBConn.Debug().First(&department, "id = ?", id).Error
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(common.NewResponse(
+			fiber.StatusNotFound, "Không tìm thấy khoa", nil))
+	}
+
+	errDelete := common.DBConn.Debug().Delete(&department).Error
+	if errDelete != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(common.NewResponse(
+			fiber.StatusInternalServerError, "Lỗi khi xóa khoa", nil))
+	}
+
+	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", nil))
+}
