@@ -51,10 +51,50 @@ func DepartmentCreate(c *fiber.Ctx) error {
 	errCreateDepartment := common.DBConn.Create(&newDepartment).Error
 	if errCreateDepartment != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(common.NewResponse(
-			fiber.StatusInternalServerError, "Lỗi khi tạo phòng ban", nil))
+			fiber.StatusInternalServerError, "Lỗi khi tạo khoa", nil))
 	}
 
 	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", newDepartment))
 }
 
 // [GET] /api/department/:id
+func DepartmentGetById(c *fiber.Ctx) error {
+	id := c.Params("id")
+	var department entity.Department
+	err := common.DBConn.First(&department, "id = ?", id).Error
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(common.NewResponse(
+			fiber.StatusNotFound, "Không tìm thấy khoa", nil))
+	}
+	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", department))
+}
+
+// [PUT] /api/department/:id
+func DepartmentUpdate(c *fiber.Ctx) error {
+	departmentRequest := new(request.DepartmentUpdateRequest)
+
+	if err := c.BodyParser(departmentRequest); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(common.NewResponse(
+			fiber.StatusBadRequest, "Lỗi khi parse request", nil))
+	}
+
+	var department entity.Department
+	id := c.Params("id")
+	err := common.DBConn.First(&department, "id = ?", id).Error
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(common.NewResponse(
+			fiber.StatusNotFound, "Không tìm thấy khoa", nil))
+	}
+
+	if departmentRequest.Name != "" {
+		department.Name = departmentRequest.Name
+	}
+
+	errUpdate := common.DBConn.Save(&department).Error
+	if errUpdate != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(common.NewResponse(
+			fiber.StatusInternalServerError, "Lỗi khi cập nhật khoa", nil))
+	}
+
+	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", department))
+}

@@ -9,7 +9,7 @@ func SetupRouter(a *fiber.App) {
 	api := a.Group("api") // /api
 
 	// Định nghĩa các route con của /api
-	// /api/home
+	// /api/departments
 	departmentRouter(api)
 
 }

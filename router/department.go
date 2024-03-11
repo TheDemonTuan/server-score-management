@@ -10,5 +10,8 @@ func departmentRouter(r fiber.Router) {
 
 	// Định nghĩa các route con của /api/department
 	departmentRouter.Get("", controllers.DepartmentList)
+	departmentRouter.Get("/:id", controllers.DepartmentGetById)
 	departmentRouter.Post("", controllers.DepartmentCreate)
+	departmentRouter.Put("/:id", controllers.DepartmentUpdate)
+
 }
