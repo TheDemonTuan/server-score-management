@@ -6,9 +6,9 @@ import (
 )
 
 type Department struct {
-	ID      string  `gorm:"primaryKey;size:25"`
+	ID      string  `json:"ID" gorm:"primaryKey;size:25"`
 	Name    string  `json:"name" gorm:"size:100"`
-	Classes []Class `gorm:"foreignKey:DepartmentID"`
+	Classes []Class `json:"Classes" gorm:"foreignKey:DepartmentID"`
 
 	CreatedAt time.Time      `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt time.Time      `json:"updated_at" gorm:"autoUpdateTime"`
