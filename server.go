@@ -34,7 +34,7 @@ func main() {
 				code = e.Code
 			}
 			return c.Status(code).JSON(common.NewResponse(
-				fiber.StatusOK,
+				code,
 				err.Error(),
 				nil))
 		},

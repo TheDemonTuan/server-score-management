@@ -19,7 +19,6 @@ func ConnectDB() {
 	if err != nil {
 		panic("Database connection failed")
 	}
-
 	log.Println("Connection successfully")
 
 	DBConn = dbConn
@@ -27,8 +26,6 @@ func ConnectDB() {
 }
 
 func runMigrate() {
-	//tạo các entity trong models/entity để tạo bảng trong database nếu chưa có
-	//err := Conn.AutoMigrate(&entity.User{})
 	err := DBConn.AutoMigrate(&entity.Teacher{}, &entity.Subject{}, &entity.User{}, &entity.Department{}, &entity.Class{}, &entity.Transcript{}, &entity.Student{})
 	if err != nil {
 		panic(err)

@@ -28,7 +28,6 @@ func DepartmentList(c *fiber.Ctx) error {
 
 // [POST] /api/department
 func DepartmentCreate(c *fiber.Ctx) error {
-
 	department := new(request.DepartmentCreateRequest)
 
 	if err := c.BodyParser(department); err != nil {
