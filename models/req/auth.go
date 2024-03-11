@@ -1,8 +1,8 @@
 package req
 
 type AuthLogin struct {
-	UserName string `json:"user_name" `
-	Password string `json:"password"`
+	UserName string `json:"username" validate:"required,min=3,max=30"`
+	Password string `json:"password" validate:"required,min=8"`
 }
 
 type AuthRegister struct {

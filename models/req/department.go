@@ -1,7 +1,7 @@
 package req
 
 type DepartmentCreate struct {
-	ID   string `json:"id" validate:"required,max=25"`
+	ID   int8   `json:"id" validate:"required"`
 	Name string `json:"name" validate:"required,max=100" `
 }
 

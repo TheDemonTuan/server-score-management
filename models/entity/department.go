@@ -6,11 +6,14 @@ import (
 )
 
 type Department struct {
-	ID      string  `json:"id" gorm:"primaryKey;size:25"`
-	Name    string  `json:"name" gorm:"size:100"`
-	Classes []Class `json:"classes" gorm:"foreignKey:DepartmentID"`
-
+	ID        int8           `json:"id" gorm:"not null;primaryKey"`
+	Name      string         `json:"name" gorm:"not null;size:100"`
 	CreatedAt time.Time      `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt time.Time      `json:"updated_at" gorm:"autoUpdateTime"`
 	DeletedAt gorm.DeletedAt `json:"deleted_at" gorm:"index"`
+
+	Classes  []Class   `gorm:"foreignKey:DepartmentID"`
+	Students []Student `gorm:"foreignKey:DepartmentID"`
+	Teachers []Teacher `gorm:"foreignKey:DepartmentID"`
+	Subjects []Subject `gorm:"foreignKey:DepartmentID"`
 }

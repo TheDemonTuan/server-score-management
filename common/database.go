@@ -26,7 +26,7 @@ func ConnectDB() {
 }
 
 func runMigrate() {
-	err := DBConn.AutoMigrate(&entity.Teacher{}, &entity.Subject{}, &entity.User{}, &entity.Department{}, &entity.Class{}, &entity.Transcript{}, &entity.Student{})
+	err := DBConn.AutoMigrate(&entity.Department{}, &entity.Teacher{}, &entity.Subject{}, &entity.Student{}, &entity.Transcript{}, &entity.Class{}, &entity.User{})
 	if err != nil {
 		panic(err)
 	}
