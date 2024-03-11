@@ -1,4 +1,4 @@
-package request
+package req
 
 type AuthLogin struct {
 	UserName string `json:"user_name" `

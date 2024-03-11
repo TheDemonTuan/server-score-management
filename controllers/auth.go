@@ -7,21 +7,21 @@ import (
 	"gorm.io/gorm"
 	"qldiemsv/common"
 	"qldiemsv/models/entity"
-	"qldiemsv/models/request"
+	"qldiemsv/models/req"
 )
 
 func AuthLogin(c *fiber.Ctx) error {
-	body := new(request.AuthLogin)
+	body := new(req.AuthLogin)
 
 	if err := c.BodyParser(body); err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "Invalid request")
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid req")
 	}
 
 	return c.Status(fiber.StatusOK).JSON(common.NewResponse(fiber.StatusOK, "Login success", body))
 }
 
 func AuthRegister(c *fiber.Ctx) error {
-	bodyData, err := common.Validator[request.AuthRegister](c)
+	bodyData, err := common.Validator[req.AuthRegister](c)
 
 	if err != nil || bodyData == nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())

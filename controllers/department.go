@@ -1,11 +1,12 @@
 package controllers
 
 import (
-	"github.com/go-playground/validator/v10"
+	"errors"
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
 	"qldiemsv/common"
 	"qldiemsv/models/entity"
-	"qldiemsv/models/request"
+	"qldiemsv/models/req"
 )
 
 // [GET] /api/department
@@ -14,10 +15,8 @@ func DepartmentList(c *fiber.Ctx) error {
 	var departments []entity.Department
 
 	// Lấy danh sách các phòng ban từ cơ sở dữ liệu
-	result := common.DBConn.Find(&departments)
-	if result.Error != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(common.NewResponse(
-			fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu", nil))
+	if err := common.DBConn.Find(&departments).Error; err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
 	}
 	// Trả về danh sách các phòng ban dưới dạng JSON
 	return c.JSON(common.NewResponse(
@@ -28,29 +27,21 @@ func DepartmentList(c *fiber.Ctx) error {
 
 // [POST] /api/department
 func DepartmentCreate(c *fiber.Ctx) error {
-	department := new(request.DepartmentCreateRequest)
+	//Hàm validate t viết sẵn chỉ cần định nghĩa validate ở bên type xong gọi như bên dưới thay cais req.???? tuỳ theo tên của req
+	bodyData, err := common.Validator[req.DepartmentCreate](c)
 
-	if err := c.BodyParser(department); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(common.NewResponse(
-			fiber.StatusBadRequest, "Lỗi khi parse request", nil))
-	}
-
-	validate := validator.New()
-	errValidate := validate.Struct(department)
-	if errValidate != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(common.NewResponse(
-			fiber.StatusBadRequest, "Dữ liệu không hợp lệ", nil))
+	// Nếu dữ liệu không hợp lệ hoặc không có dữ liệu thì trả về lỗi 400
+	if err != nil || bodyData == nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
 	newDepartment := entity.Department{
-		ID:   department.ID,
-		Name: department.Name,
+		ID:   bodyData.ID,
+		Name: bodyData.Name,
 	}
 
-	errCreateDepartment := common.DBConn.Create(&newDepartment).Error
-	if errCreateDepartment != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(common.NewResponse(
-			fiber.StatusInternalServerError, "Lỗi khi tạo khoa", nil))
+	if err := common.DBConn.Create(&newDepartment).Error; err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi tạo khoa")
 	}
 
 	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", newDepartment))
@@ -60,39 +51,42 @@ func DepartmentCreate(c *fiber.Ctx) error {
 func DepartmentGetById(c *fiber.Ctx) error {
 	id := c.Params("id")
 	var department entity.Department
-	err := common.DBConn.First(&department, "id = ?", id).Error
-	if err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(common.NewResponse(
-			fiber.StatusNotFound, "Không tìm thấy khoa", nil))
+
+	if err := common.DBConn.First(&department, "id = ?", id).Error; err != nil {
+		// đây là check coi lỗi trả ve có phải là not found hay không đọc document gorm chỗ error handling thì đây là do người dùng truyền sai id nên không có dữ liệu nên status bad req mới đúng
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy khoa")
+		} else {
+			return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
+		} // đây là các lỗi chưa biết thì trả về lỗi 500 do chưa biết lỗi từ đau mà ra
 	}
+
 	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", department))
 }
 
 // [PUT] /api/department/:id
 func DepartmentUpdate(c *fiber.Ctx) error {
-	departmentRequest := new(request.DepartmentUpdateRequest)
+	bodyData, err := common.Validator[req.DepartmentUpdate](c)
 
-	if err := c.BodyParser(departmentRequest); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(common.NewResponse(
-			fiber.StatusBadRequest, "Lỗi khi parse request", nil))
+	if err != nil || bodyData == nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
 	var department entity.Department
+
 	id := c.Params("id")
-	err := common.DBConn.First(&department, "id = ?", id).Error
-	if err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(common.NewResponse(
-			fiber.StatusNotFound, "Không tìm thấy khoa", nil))
+	if err := common.DBConn.First(&department, "id = ?", id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy khoa")
+		} else {
+			return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
+		}
 	}
 
-	if departmentRequest.Name != "" {
-		department.Name = departmentRequest.Name
-	}
+	department.Name = bodyData.Name
 
-	errUpdate := common.DBConn.Save(&department).Error
-	if errUpdate != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(common.NewResponse(
-			fiber.StatusInternalServerError, "Lỗi khi cập nhật khoa", nil))
+	if err := common.DBConn.Save(&department).Error; err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi cập nhật khoa")
 	}
 
 	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", department))
@@ -102,16 +96,16 @@ func DepartmentUpdate(c *fiber.Ctx) error {
 func DepartmentDelete(c *fiber.Ctx) error {
 	id := c.Params("id")
 	var department entity.Department
-	err := common.DBConn.Debug().First(&department, "id = ?", id).Error
-	if err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(common.NewResponse(
-			fiber.StatusNotFound, "Không tìm thấy khoa", nil))
+	if err := common.DBConn.First(&department, "id = ?", id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy khoa")
+		} else {
+			return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
+		}
 	}
 
-	errDelete := common.DBConn.Debug().Delete(&department).Error
-	if errDelete != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(common.NewResponse(
-			fiber.StatusInternalServerError, "Lỗi khi xóa khoa", nil))
+	if err := common.DBConn.Delete(&department).Error; err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi xóa khoa")
 	}
 
 	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", nil))
