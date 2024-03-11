@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"github.com/goccy/go-json"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/compress"
@@ -26,19 +27,17 @@ func main() {
 		StrictRouting:     true,
 		ServerHeader:      "Quan Ly Diem Sinh Vien",
 		AppName:           "Quan Ly Diem Sinh Vien v1.0.0",
-		//ErrorHandler: func(c *fiber.Ctx, err error) error {
-		//	code := fiber.StatusInternalServerError
-		//	//TODO: Handle json error
-		//	var e *fiber.Error
-		//	if errors.As(err, &e) {
-		//		code = e.Code
-		//	}
-		//	return c.Status(code).JSON(common.Response{
-		//		StatusCode: code,
-		//		Message:    err.Error(),
-		//		Data:       nil,
-		//	})
-		//},
+		ErrorHandler: func(c *fiber.Ctx, err error) error {
+			code := fiber.StatusInternalServerError
+			var e *fiber.Error
+			if errors.As(err, &e) {
+				code = e.Code
+			}
+			return c.Status(code).JSON(common.NewResponse(
+				fiber.StatusOK,
+				err.Error(),
+				nil))
+		},
 	})
 
 	//Testing

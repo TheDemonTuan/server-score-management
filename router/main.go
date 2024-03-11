@@ -5,11 +5,8 @@ import (
 )
 
 func SetupRouter(a *fiber.App) {
-	// Group để định nghĩa việc xử lý các request phải đi qua /api
 	api := a.Group("api") // /api
 
-	// Định nghĩa các route con của /api
-	// /api/home
-	homeRouter(api)
-	// dan da o day
+	authRouter(api)
+	departmentRouter(api)
 }
