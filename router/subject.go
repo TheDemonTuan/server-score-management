@@ -12,6 +12,6 @@ func subjectRouter(r fiber.Router) {
 
 	subjectRouter.Get("/:id", controllers.SubjectGetById)
 	subjectRouter.Post("", controllers.SubjectCreate)
-	//subjectRouter.Put("/:id", controllers.DepartmentUpdate)
-	//subjectRouter.Delete("/:id", controllers.DepartmentDelete)
+	subjectRouter.Put("/:id", controllers.SubjectUpdate)
+	subjectRouter.Delete("/:id", controllers.SubjectDelete)
 }

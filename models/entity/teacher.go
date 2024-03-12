@@ -6,7 +6,7 @@ import (
 )
 
 type Teacher struct {
-	ID           string         `gorm:"primaryKey;size:25"`
+	ID           string         `json:"id" gorm:"primaryKey;size:25"`
 	Name         string         `json:"name" gorm:"size:50"`
 	BirthDay     time.Time      `json:"birth_day"`
 	Email        string         `json:"email" gorm:"size:50"`

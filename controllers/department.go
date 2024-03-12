@@ -15,7 +15,7 @@ func DepartmentList(c *fiber.Ctx) error {
 	var departments []entity.Department
 
 	// Lấy danh sách các phòng ban từ cơ sở dữ liệu
-	if err := common.DBConn.Find(&departments).Error; err != nil {
+	if err := common.DBConn.Preload("Subjects").Preload("Teachers").Find(&departments).Error; err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
 	}
 	// Trả về danh sách các phòng ban dưới dạng JSON
@@ -99,12 +99,15 @@ func DepartmentDelete(c *fiber.Ctx) error {
 	if err := common.DBConn.First(&department, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy khoa")
+		} else if errors.Is(err, gorm.ErrForeignKeyViolated) {
+			return fiber.NewError(fiber.StatusBadRequest, "Không thể xóa khoa này vì có môn học thuộc khoa này")
 		} else {
 			return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
 		}
 	}
 
 	if err := common.DBConn.Delete(&department).Error; err != nil {
+
 		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi xóa khoa")
 	}
 
