@@ -6,12 +6,11 @@ import (
 )
 
 func SetupRouter(app *fiber.App) {
-	//Các api public mà không cần phải đăng nhập để truy cập
 	publicAPI := app.Group("api")
 	authRouter(publicAPI)
 
-	//Các api cần phải đăng nhập để truy cập
 	privateAPI := app.Group("api", middleware.Protected)
+	userRouter(privateAPI)
 	departmentRouter(privateAPI)
 	subjectRouter(privateAPI)
 }

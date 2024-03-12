@@ -13,7 +13,7 @@ import (
 )
 
 func Protected(c *fiber.Ctx) error {
-	userInfoData, err := func() (entity.User, error) {
+	currentUserInfoData, err := func() (entity.User, error) {
 		jwtToken := c.Cookies(os.Getenv("JWT_NAME"), "")
 		if jwtToken == "" {
 			headerToken := c.Get("Authorization")
@@ -68,11 +68,11 @@ func Protected(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusUnauthorized, err.Error())
 	}
 
-	if userInfoData == (entity.User{}) {
+	if currentUserInfoData == (entity.User{}) {
 		return fiber.NewError(fiber.StatusUnauthorized, "User not found")
 	}
 
-	c.Locals("current_user_info", userInfoData)
+	c.Locals("currentUserInfo", currentUserInfoData)
 
 	return c.Next()
 }
