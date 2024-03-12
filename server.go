@@ -5,6 +5,7 @@ import (
 	"github.com/goccy/go-json"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/compress"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/etag"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"os"
@@ -42,10 +43,10 @@ func main() {
 
 	//Testing
 	//app.Use(helmet.New())
-	//app.Use(cors.New(cors.Config{
-	//	AllowOrigins:     os.Getenv("CLIENT_URI"),
-	//	AllowCredentials: true,
-	//}))
+	app.Use(cors.New(cors.Config{
+		AllowOrigins:     os.Getenv("CLIENT_URL"),
+		AllowCredentials: true,
+	}))
 	app.Use(etag.New())
 	app.Use(compress.New(compress.Config{
 		Level: compress.LevelBestSpeed, // 1

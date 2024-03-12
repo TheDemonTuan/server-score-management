@@ -6,8 +6,9 @@ import (
 )
 
 type Department struct {
-	ID        int8           `json:"id" gorm:"not null;primaryKey"`
-	Name      string         `json:"name" gorm:"not null;size:100"`
+	ID   int8   `json:"id" gorm:"not null;primaryKey"`
+	Name string `json:"name" gorm:"not null;size:100"`
+
 	CreatedAt time.Time      `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt time.Time      `json:"updated_at" gorm:"autoUpdateTime"`
 	DeletedAt gorm.DeletedAt `json:"deleted_at" gorm:"index"`
