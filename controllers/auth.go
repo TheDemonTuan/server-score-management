@@ -111,3 +111,21 @@ func createJWT(c *fiber.Ctx, userId uint) error {
 
 	return nil
 }
+
+func AuthVerify(c *fiber.Ctx) error {
+	userData, userDataIsOk := c.Locals("currentUserInfo").(entity.User)
+
+	if !userDataIsOk {
+		return fiber.NewError(fiber.StatusUnauthorized, "Unauthorized")
+	}
+	return c.JSON(common.NewResponse(
+		fiber.StatusOK,
+		"Success",
+		userData),
+	)
+}
+
+func AuthLogout(c *fiber.Ctx) error {
+	c.ClearCookie(os.Getenv("JWT_NAME"))
+	return c.JSON(common.NewResponse(fiber.StatusOK, "Đăng xuất thành công", nil))
+}
