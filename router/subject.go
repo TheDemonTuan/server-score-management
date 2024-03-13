@@ -6,7 +6,7 @@ import (
 )
 
 func subjectRouter(r fiber.Router) {
-	subjectRouter := r.Group("subject")
+	subjectRouter := r.Group("subjects")
 
 	subjectRouter.Get("", controllers.SubjectList)
 

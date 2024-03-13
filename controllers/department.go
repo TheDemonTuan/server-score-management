@@ -36,7 +36,6 @@ func DepartmentCreate(c *fiber.Ctx) error {
 	}
 
 	newDepartment := entity.Department{
-		ID:   bodyData.ID,
 		Name: bodyData.Name,
 	}
 
@@ -95,19 +94,18 @@ func DepartmentUpdate(c *fiber.Ctx) error {
 // [DELETE] /api/department/:id
 func DepartmentDelete(c *fiber.Ctx) error {
 	id := c.Params("id")
+
 	var department entity.Department
+
 	if err := common.DBConn.First(&department, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy khoa")
-		} else if errors.Is(err, gorm.ErrForeignKeyViolated) {
-			return fiber.NewError(fiber.StatusBadRequest, "Không thể xóa khoa này vì có môn học thuộc khoa này")
-		} else {
-			return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
 		}
+
+		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
 	}
 
 	if err := common.DBConn.Delete(&department).Error; err != nil {
-
 		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi xóa khoa")
 	}
 

@@ -19,7 +19,7 @@ func Validator[T any](c *fiber.Ctx) (*T, error) {
 		err := errs.(validator.ValidationErrors)[0]
 		switch err.Tag() {
 		case "required":
-			return nil, errors.New(fmt.Sprintf("T'%s' không được để trống", err.Field()))
+			return nil, errors.New(fmt.Sprintf("'%s' không được để trống", err.Field()))
 		case "email":
 			return nil, errors.New(fmt.Sprintf("'%s' không phải định dạng email ", err.Field()))
 		case "len":
@@ -35,9 +35,9 @@ func Validator[T any](c *fiber.Ctx) (*T, error) {
 		case "number":
 			return nil, errors.New(fmt.Sprintf("'%s' chỉ được phép là số", err.Field()))
 		case "gte":
-			return nil, errors.New(fmt.Sprintf("'%s' must be greater than or equal %v", err.Field(), err.Param()))
+			return nil, errors.New(fmt.Sprintf("'%s' phải nhiều hơn hoặc bằng %v", err.Field(), err.Param()))
 		case "lte":
-			return nil, errors.New(fmt.Sprintf("'%s' must be less than or equal %v", err.Field(), err.Param()))
+			return nil, errors.New(fmt.Sprintf("'%s' phải ít hơn hoặc bằng %v", err.Field(), err.Param()))
 		default:
 			return nil, errors.New(fmt.Sprintf("'%s': '%v' must satisfy '%s' '%v' criteria", err.Field(), err.Value(), err.Tag(), err.Param()))
 		}

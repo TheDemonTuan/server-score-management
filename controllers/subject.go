@@ -34,7 +34,6 @@ func SubjectList(c *fiber.Ctx) error {
 		subjects))
 }
 
-// [POST] /api/subject
 func SubjectCreate(c *fiber.Ctx) error {
 	bodyData, err := common.Validator[req.SubjectCreate](c)
 
@@ -42,15 +41,8 @@ func SubjectCreate(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
-	totalPercentage := bodyData.ProcessPercentage + bodyData.MidtermPercentage + bodyData.FinalPercentage
-	if totalPercentage != 100 {
+	if totalPercentage := bodyData.ProcessPercentage + bodyData.MidtermPercentage + bodyData.FinalPercentage; totalPercentage != 100 {
 		return fiber.NewError(fiber.StatusBadRequest, "Tổng phần trăm phải là 100")
-	}
-
-	if bodyData.ProcessPercentage < 0 || bodyData.ProcessPercentage > 100 ||
-		bodyData.MidtermPercentage < 0 || bodyData.MidtermPercentage > 100 ||
-		bodyData.FinalPercentage < 0 || bodyData.FinalPercentage > 100 {
-		return fiber.NewError(fiber.StatusBadRequest, "Phần trăm phải từ 0 đến 100")
 	}
 
 	newSubject := entity.Subject{
