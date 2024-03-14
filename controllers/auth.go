@@ -38,7 +38,7 @@ func AuthLogin(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 
-	return c.Status(fiber.StatusOK).JSON(common.NewResponse(fiber.StatusOK, "Đăng nhập thành công", nil))
+	return c.Status(fiber.StatusOK).JSON(common.NewResponse(fiber.StatusOK, "Đăng nhập thành công", userRecord))
 }
 
 func AuthRegister(c *fiber.Ctx) error {
@@ -81,7 +81,7 @@ func AuthRegister(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(common.NewResponse(fiber.StatusOK, "Đăng ký tài khoản thành công", nil))
+	return c.Status(fiber.StatusCreated).JSON(common.NewResponse(fiber.StatusOK, "Đăng ký tài khoản thành công", newUser))
 }
 
 func createJWT(c *fiber.Ctx, userId uint) error {
@@ -126,6 +126,27 @@ func AuthVerify(c *fiber.Ctx) error {
 }
 
 func AuthLogout(c *fiber.Ctx) error {
-	c.ClearCookie(os.Getenv("JWT_NAME"))
+	userData, userDataIsOk := c.Locals("currentUserInfo").(entity.User)
+
+	if !userDataIsOk {
+		return fiber.NewError(fiber.StatusUnauthorized, "Unauthorized")
+	}
+
+	uid, uidErr := c.ParamsInt("uid")
+
+	if uidErr != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Uid không hợp lệ")
+	}
+
+	if uint(uid) != userData.ID {
+		return fiber.NewError(fiber.StatusUnauthorized, "Unauthorized")
+	}
+
+	//c.ClearCookie(os.Getenv("JWT_NAME"))
+	cookie := new(fiber.Cookie)
+	cookie.Name = os.Getenv("JWT_NAME")
+	cookie.Value = ""
+	cookie.Expires = time.Now().Add(-24 * time.Hour)
+	c.Cookie(cookie)
 	return c.JSON(common.NewResponse(fiber.StatusOK, "Đăng xuất thành công", nil))
 }
