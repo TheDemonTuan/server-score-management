@@ -15,7 +15,7 @@ func DepartmentList(c *fiber.Ctx) error {
 	var departments []entity.Department
 
 	// Lấy danh sách các phòng ban từ cơ sở dữ liệu
-	if err := common.DBConn.Preload("Subjects").Preload("Teachers").Find(&departments).Error; err != nil {
+	if err := common.DBConn.Preload("Teachers").Preload("Subjects").Preload("Classes").Preload("Students").Find(&departments).Error; err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
 	}
 	// Trả về danh sách các phòng ban dưới dạng JSON
@@ -51,7 +51,9 @@ func DepartmentGetById(c *fiber.Ctx) error {
 	id := c.Params("id")
 	var department entity.Department
 
-	if err := common.DBConn.First(&department, "id = ?", id).Error; err != nil {
+	if err := common.DBConn.Preload("Teachers").
+		Preload("Subjects").Preload("Classes").Preload("Students").
+		First(&department, "id = ?", id).Error; err != nil {
 		// đây là check coi lỗi trả ve có phải là not found hay không đọc document gorm chỗ error handling thì đây là do người dùng truyền sai id nên không có dữ liệu nên status bad req mới đúng
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy khoa")

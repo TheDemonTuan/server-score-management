@@ -2,19 +2,39 @@ package controllers
 
 import (
 	"errors"
+	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
+	"math/rand"
 	"qldiemsv/common"
 	"qldiemsv/models/entity"
 	"qldiemsv/models/req"
+	"strconv"
 	"time"
 )
+
+func generateTeacherID(departmentID int8) string {
+
+	idPrefix := "GV"
+
+	departmentCode := strconv.Itoa(int(departmentID))
+
+	if len(departmentCode) == 1 {
+		departmentCode = "0" + departmentCode
+	}
+
+	randomNumbers := fmt.Sprintf("%06d", rand.Intn(10000))
+
+	teacherID := idPrefix + departmentCode + randomNumbers
+
+	return teacherID
+}
 
 // [GET] /api/teacher
 func TeacherList(c *fiber.Ctx) error {
 	var teachers []entity.Teacher
 
-	if err := common.DBConn.Find(&teachers).Error; err != nil {
+	if err := common.DBConn.Preload("Subjects").Find(&teachers).Error; err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
 
 	}
@@ -26,7 +46,7 @@ func TeacherGetById(c *fiber.Ctx) error {
 	id := c.Params("id")
 	var teacher entity.Teacher
 
-	if err := common.DBConn.First(&teacher, "id = ?", id).Error; err != nil {
+	if err := common.DBConn.Preload("Subjects").First(&teacher, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy giáo viên")
 		} else {
@@ -53,7 +73,7 @@ func TeacherCreate(c *fiber.Ctx) error {
 
 	}
 	newTeacher := entity.Teacher{
-		ID:           bodyData.ID,
+		ID:           generateTeacherID(bodyData.DepartmentID),
 		Name:         bodyData.Name,
 		Email:        bodyData.Email,
 		Phone:        bodyData.Phone,

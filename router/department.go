@@ -6,7 +6,7 @@ import (
 )
 
 func departmentRouter(r fiber.Router) {
-	departmentRouter := r.Group("department")
+	departmentRouter := r.Group("departments")
 
 	departmentRouter.Get("", controllers.DepartmentList)
 	departmentRouter.Get("/:id", controllers.DepartmentGetById)

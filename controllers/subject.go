@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"errors"
+	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 	"math/rand"
@@ -11,12 +12,20 @@ import (
 	"strconv"
 )
 
-func GenerateSubjectID() string {
-	id := ""
-	for i := 0; i < 6; i++ {
-		id += strconv.Itoa(rand.Intn(10))
+func GenerateSubjectID(departmentID int8) string {
+	idPrefix := "CS"
+
+	departmentCode := strconv.Itoa(int(departmentID))
+
+	if len(departmentCode) == 1 {
+		departmentCode = "0" + departmentCode
 	}
-	return "CS" + id
+
+	randomNumbers := fmt.Sprintf("%06d", rand.Intn(10000))
+
+	subjectID := idPrefix + departmentCode + randomNumbers
+
+	return subjectID
 }
 
 // [GET] /api/subject
@@ -24,7 +33,7 @@ func SubjectList(c *fiber.Ctx) error {
 
 	var subjects []entity.Subject
 
-	if err := common.DBConn.Find(&subjects).Error; err != nil {
+	if err := common.DBConn.Preload("Transcripts").Find(&subjects).Error; err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
 	}
 
@@ -46,7 +55,7 @@ func SubjectCreate(c *fiber.Ctx) error {
 	}
 
 	newSubject := entity.Subject{
-		ID:                GenerateSubjectID(),
+		ID:                GenerateSubjectID(bodyData.DepartmentID),
 		Name:              bodyData.Name,
 		Credits:           bodyData.Credits,
 		ProcessPercentage: bodyData.ProcessPercentage,
@@ -66,7 +75,7 @@ func SubjectGetById(c *fiber.Ctx) error {
 	id := c.Params("id")
 	var subject entity.Subject
 
-	if err := common.DBConn.First(&subject, "id = ?", id).Error; err != nil {
+	if err := common.DBConn.Preload("Transcripts").First(&subject, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy khoa")
 		} else {

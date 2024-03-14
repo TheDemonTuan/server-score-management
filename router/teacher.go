@@ -6,7 +6,7 @@ import (
 )
 
 func teacherRouter(r fiber.Router) {
-	teacherRouter := r.Group("teacher")
+	teacherRouter := r.Group("teachers")
 
 	teacherRouter.Get("", controllers.TeacherList)
 	teacherRouter.Get("/:id", controllers.TeacherGetById)
