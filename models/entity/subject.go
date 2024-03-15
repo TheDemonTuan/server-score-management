@@ -6,9 +6,9 @@ import (
 )
 
 type Subject struct {
-	ID                string `gorm:"not null;primaryKey;size:50"`
-	Name              string `gorm:"not null;size:100"`
-	Credits           int    `gorm:"not null"`
+	ID                string `json:"id" gorm:"not null;primaryKey;size:50"`
+	Name              string `json:"name" gorm:"not null;size:100"`
+	Credits           int    `json:"credits" gorm:"not null"`
 	ProcessPercentage int8   `json:"process_percentage"`
 	MidtermPercentage int8   `json:"midterm_percentage" gorm:"not null"`
 	FinalPercentage   int8   `json:"final_percentage" gorm:"not null"`
@@ -18,5 +18,5 @@ type Subject struct {
 	UpdatedAt time.Time      `json:"updated_at" gorm:"autoUpdateTime"`
 	DeletedAt gorm.DeletedAt `json:"deleted_at" gorm:"index"`
 
-	Transcripts []Transcript `gorm:"foreignKey:SubjectID"`
+	Transcripts []Transcript `json:"transcripts" gorm:"foreignKey:SubjectID"`
 }

@@ -19,4 +19,5 @@ type Teacher struct {
 	DeletedAt    gorm.DeletedAt `json:"deleted_at" gorm:"index"`
 
 	Subjects []Subject `gorm:"many2many:teacher_subjects"`
+	Classes  []Class   `json:"classes" gorm:"foreignKey:TeacherID"`
 }

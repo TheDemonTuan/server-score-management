@@ -11,8 +11,8 @@ type Department struct {
 	CreatedAt time.Time `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt time.Time `json:"updated_at" gorm:"autoUpdateTime"`
 
-	Classes  []Class   `gorm:"foreignKey:DepartmentID"`
-	Students []Student `gorm:"foreignKey:DepartmentID"`
-	Teachers []Teacher `gorm:"foreignKey:DepartmentID"`
-	Subjects []Subject `gorm:"foreignKey:DepartmentID"`
+	Classes  []Class   `json:"classes" gorm:"foreignKey:DepartmentID"`
+	Students []Student `json:"students" gorm:"foreignKey:DepartmentID"`
+	Teachers []Teacher `json:"teachers" gorm:"foreignKey:DepartmentID"`
+	Subjects []Subject `json:"subjects" gorm:"foreignKey:DepartmentID"`
 }
