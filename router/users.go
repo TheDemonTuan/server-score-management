@@ -6,7 +6,7 @@ import (
 )
 
 func userRouter(r fiber.Router) {
-	userRoute := r.Group("users")
+	usersRoute := r.Group("users")
 
-	userRoute.Get("me", controllers.UserMe)
+	usersRoute.Get("me", controllers.UserMe)
 }

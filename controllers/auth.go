@@ -126,23 +126,6 @@ func AuthVerify(c *fiber.Ctx) error {
 }
 
 func AuthLogout(c *fiber.Ctx) error {
-	userData, userDataIsOk := c.Locals("currentUserInfo").(entity.User)
-
-	if !userDataIsOk {
-		return fiber.NewError(fiber.StatusUnauthorized, "Unauthorized")
-	}
-
-	uid, uidErr := c.ParamsInt("uid")
-
-	if uidErr != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "Uid không hợp lệ")
-	}
-
-	if uint(uid) != userData.ID {
-		return fiber.NewError(fiber.StatusUnauthorized, "Unauthorized")
-	}
-
-	//c.ClearCookie(os.Getenv("JWT_NAME"))
 	cookie := new(fiber.Cookie)
 	cookie.Name = os.Getenv("JWT_NAME")
 	cookie.Value = ""

@@ -9,25 +9,14 @@ import (
 	"os"
 	"qldiemsv/common"
 	"qldiemsv/models/entity"
-	"strings"
 )
 
 func Protected(c *fiber.Ctx) error {
 	currentUserInfoData, err := func() (entity.User, error) {
 		jwtToken := c.Cookies(os.Getenv("JWT_NAME"), "")
+
 		if jwtToken == "" {
-			headerToken := c.Get("Authorization")
-			if headerToken == "" {
-				return entity.User{}, errors.New("Missing token")
-			}
-
-			tokenFields := strings.Fields(headerToken)
-
-			if len(tokenFields) != 2 || strings.ToLower(tokenFields[0]) != "bearer" || tokenFields[1] == "" {
-				return entity.User{}, errors.New("Bad authorization header")
-			}
-
-			jwtToken = tokenFields[1]
+			return entity.User{}, errors.New("JWT not found")
 		}
 
 		token, tokenIsErr := jwt.Parse(jwtToken, func(token *jwt.Token) (interface{}, error) {

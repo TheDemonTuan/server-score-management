@@ -28,11 +28,11 @@ func ConnectDB() {
 
 func runMigrate() {
 	// Drop table
-	//if err := DBConn.Migrator().DropTable(&entity.Department{}, &entity.Teacher{}, &entity.Subject{}, &entity.Student{}, &entity.Transcript{}, &entity.Class{}, &entity.User{}); err != nil {
+	//if err := DBConn.Migrator().DropTable(&entity.Department{}, &entity.Instructor{}, &entity.Subject{}, &entity.Student{}, &entity.Grade{}, &entity.Class{}, &entity.Assignment{}, &entity.User{}); err != nil {
 	//	panic(err)
 	//}
 
-	if err := DBConn.AutoMigrate(&entity.Department{}, &entity.Teacher{}, &entity.Subject{}, &entity.Student{}, &entity.Transcript{}, &entity.Class{}, &entity.User{}); err != nil {
+	if err := DBConn.AutoMigrate(&entity.Department{}, &entity.Instructor{}, &entity.Subject{}, &entity.Student{}, &entity.Grade{}, &entity.Class{}, &entity.Assignment{}, &entity.User{}); err != nil {
 		panic(err)
 	}
 	log.Println("Success to migrate")

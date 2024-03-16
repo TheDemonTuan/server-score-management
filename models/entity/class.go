@@ -1,19 +1,19 @@
 package entity
 
 import (
-	"gorm.io/gorm"
 	"time"
 )
 
 type Class struct {
-	ID           int8   `json:"id" gorm:"not null;primaryKey"`
-	Name         string `json:"name" gorm:"not null;size:100"`
-	DepartmentID int8   `json:"department_id" gorm:"not null;index"`
-	TeacherID    string `json:"teacher_id" gorm:"not null;index"`
+	ID   uint   `json:"id" gorm:"primaryKey;autoIncrement"`
+	Name string `json:"name" gorm:"not null;size:100"`
+	Max  int    `json:"max" gorm:"not null"`
 
-	CreatedAt time.Time      `json:"created_at" gorm:"autoCreateTime"`
-	UpdatedAt time.Time      `json:"updated_at" gorm:"autoUpdateTime"`
-	DeletedAt gorm.DeletedAt `json:"deleted_at" gorm:"index"`
+	DepartmentID uint   `json:"department_id" gorm:"not null;index"`
+	InstructorID string `json:"instructor_id" gorm:"not null;index"`
 
-	Students []Student `gorm:"foreignKey:ClassID"`
+	CreatedAt time.Time `json:"created_at" gorm:"autoCreateTime"`
+	UpdatedAt time.Time `json:"updated_at" gorm:"autoUpdateTime"`
+
+	Students []Student `json:"students" gorm:"foreignKey:ClassID"`
 }

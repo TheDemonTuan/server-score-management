@@ -12,5 +12,5 @@ func authRouter(r fiber.Router) {
 	authRoute.Post("login", controllers.AuthLogin)
 	authRoute.Post("register", controllers.AuthRegister)
 	authRoute.Get("verify", middleware.Protected, controllers.AuthVerify)
-	authRoute.Delete("logout/:uid", middleware.Protected, controllers.AuthLogout)
+	authRoute.Delete("logout", middleware.Protected, controllers.AuthLogout)
 }

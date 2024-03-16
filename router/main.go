@@ -6,13 +6,13 @@ import (
 )
 
 func SetupRouter(app *fiber.App) {
-	publicAPI := app.Group("api")
-	authRouter(publicAPI)
+	publicAPIRoute := app.Group("api")
+	authRouter(publicAPIRoute)
 
-	privateAPI := app.Group("api", middleware.Protected)
-	userRouter(privateAPI)
-	departmentRouter(privateAPI)
-	subjectRouter(privateAPI)
-	teacherRouter(privateAPI)
-	studentRouter(privateAPI)
+	privateAPIRoute := app.Group("api", middleware.Protected)
+	userRouter(privateAPIRoute)
+	departmentsRouter(privateAPIRoute)
+	subjectsRouter(privateAPIRoute)
+	instructorsRouter(privateAPIRoute)
+	studentsRouter(privateAPIRoute)
 }

@@ -9,23 +9,21 @@ import (
 	"qldiemsv/models/req"
 )
 
-// [GET] /api/department
-func DepartmentList(c *fiber.Ctx) error {
-	// Khai báo một mảng chứa các phòng ban
+// [GET] /api/departments
+func DepartmentGetList(c *fiber.Ctx) error {
 	var departments []entity.Department
 
-	// Lấy danh sách các phòng ban từ cơ sở dữ liệu
-	if err := common.DBConn.Preload("Teachers").Preload("Subjects").Preload("Classes").Preload("Students").Find(&departments).Error; err != nil {
+	if err := common.DBConn.Preload("Instructors").Preload("Subjects").Preload("Classes").Preload("Students").Find(&departments).Error; err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
 	}
-	// Trả về danh sách các phòng ban dưới dạng JSON
+
 	return c.JSON(common.NewResponse(
 		fiber.StatusOK,
 		"Success",
 		departments))
 }
 
-// [POST] /api/department
+// [POST] /api/departments
 func DepartmentCreate(c *fiber.Ctx) error {
 	bodyData, err := common.Validator[req.DepartmentCreate](c)
 
@@ -44,28 +42,32 @@ func DepartmentCreate(c *fiber.Ctx) error {
 	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", newDepartment))
 }
 
-// [GET] /api/department/:id
+// [GET] /api/departments/:id
 func DepartmentGetById(c *fiber.Ctx) error {
 	id := c.Params("id")
 	var department entity.Department
 
-	if err := common.DBConn.Preload("Teachers").
+	if err := common.DBConn.Preload("Instructors").
 		Preload("Subjects").Preload("Classes").Preload("Students").
 		First(&department, "id = ?", id).Error; err != nil {
-
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy khoa")
 		}
-
 		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
 	}
 
 	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", department))
 }
 
-// [PUT] /api/department/:id
-func DepartmentUpdate(c *fiber.Ctx) error {
-	bodyData, err := common.Validator[req.DepartmentUpdate](c)
+// [PUT] /api/departments/:id
+func DepartmentUpdateById(c *fiber.Ctx) error {
+	id, idErr := c.ParamsInt("id")
+
+	if idErr != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "ID không hợp lệ")
+	}
+
+	bodyData, err := common.Validator[req.DepartmentUpdateById](c)
 
 	if err != nil || bodyData == nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
@@ -73,7 +75,6 @@ func DepartmentUpdate(c *fiber.Ctx) error {
 
 	var department entity.Department
 
-	id := c.Params("id")
 	if err := common.DBConn.First(&department, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy khoa")
@@ -89,9 +90,13 @@ func DepartmentUpdate(c *fiber.Ctx) error {
 	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", department))
 }
 
-// [DELETE] /api/department/:id
-func DepartmentDelete(c *fiber.Ctx) error {
-	id := c.Params("id")
+// [DELETE] /api/departments/:id
+func DepartmentDeleteById(c *fiber.Ctx) error {
+	id, idErr := c.ParamsInt("id")
+
+	if idErr != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "ID không hợp lệ")
+	}
 
 	var department entity.Department
 
@@ -99,7 +104,6 @@ func DepartmentDelete(c *fiber.Ctx) error {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy khoa")
 		}
-
 		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
 	}
 
