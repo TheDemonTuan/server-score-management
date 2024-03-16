@@ -5,7 +5,7 @@ import (
 	"qldiemsv/controllers"
 )
 
-func userRouter(r fiber.Router) {
+func usersRouter(r fiber.Router) {
 	usersRoute := r.Group("users")
 
 	usersRoute.Get("me", controllers.UserMe)

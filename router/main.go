@@ -10,7 +10,7 @@ func SetupRouter(app *fiber.App) {
 	authRouter(publicAPIRoute)
 
 	privateAPIRoute := app.Group("api", middleware.Protected)
-	userRouter(privateAPIRoute)
+	usersRouter(privateAPIRoute)
 	departmentsRouter(privateAPIRoute)
 	subjectsRouter(privateAPIRoute)
 	instructorsRouter(privateAPIRoute)

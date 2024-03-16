@@ -20,7 +20,7 @@ type Instructor struct {
 	CreatedAt time.Time `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt time.Time `json:"updated_at" gorm:"autoUpdateTime"`
 
-	Classes     []Class      `json:"classes" gorm:"foreignKey:InstructorID"`
+	Classes     []Class      `json:"classes" gorm:"foreignKey:HostInstructorID"`
 	Grades      []Grade      `json:"grades" gorm:"foreignKey:ByInstructorID"`
 	Assignments []Assignment `json:"assignments" gorm:"foreignKey:InstructorID"`
 }
