@@ -55,7 +55,7 @@ func main() {
 
 	router.SetupRouter(app)
 
-	err := app.Listen(os.Getenv("PORT"))
+	err := app.Listen(":3000")
 	if err != nil {
 		panic("Error while starting server")
 		return
