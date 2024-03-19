@@ -61,7 +61,7 @@ func InstructorCreate(c *fiber.Ctx) error {
 
 	var instructor entity.Instructor
 
-	if err := common.DBConn.First(&instructor, "email = ? or phone = ?", bodyData.Email).Error; err != nil {
+	if err := common.DBConn.First(&instructor, "email = ? or phone = ?", bodyData.Email, bodyData.Phone).Error; err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
 		}
@@ -94,6 +94,7 @@ func InstructorCreate(c *fiber.Ctx) error {
 
 // [PUT] /api/instructors/:id
 func InstructorUpdateById(c *fiber.Ctx) error {
+	instructorID := c.Params("id")
 	bodyData, err := common.Validator[req.InstructorUpdateById](c)
 
 	if err != nil || bodyData == nil {
@@ -108,22 +109,23 @@ func InstructorUpdateById(c *fiber.Ctx) error {
 
 	var instructor entity.Instructor
 
-	if err := common.DBConn.First(&instructor, "email = ? or phone = ?", bodyData.Email).Error; err != nil {
+	if err := common.DBConn.First(&instructor, "id = ?", instructorID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy giảng viên")
+		}
+		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
+	}
+
+	var logicInstructor entity.Instructor
+
+	if err := common.DBConn.First(&logicInstructor, "email = ? or phone = ?", bodyData.Email, bodyData.Phone).Error; err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
 		}
 	}
 
-	if instructor.ID != "" {
+	if logicInstructor.ID != "" && instructor.ID != instructorID {
 		return fiber.NewError(fiber.StatusBadRequest, "Email hoặc số điện thoại đã tồn tại")
-	}
-
-	id := c.Params("id")
-	if err := common.DBConn.First(&instructor, "id = ?", id).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy giảng viên")
-		}
-		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
 	}
 	//End logic check
 

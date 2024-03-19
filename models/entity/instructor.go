@@ -11,7 +11,7 @@ type Instructor struct {
 	Email     string    `json:"email" gorm:"not null;unique;size:100"`
 	Address   string    `json:"address" gorm:"not null;size:100"`
 	BirthDay  time.Time `json:"birth_day" gorm:"not null"`
-	Phone     string    `json:"phone" gorm:"not null;unique;size:20"`
+	Phone     string    `json:"phone" gorm:"not null;unique;size:11"`
 	Gender    bool      `json:"gender" gorm:"not null"`
 	Degree    string    `json:"degree" gorm:"not null;size:50"`
 
