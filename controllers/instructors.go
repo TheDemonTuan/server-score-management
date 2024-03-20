@@ -146,21 +146,49 @@ func InstructorUpdateById(c *fiber.Ctx) error {
 	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", instructor))
 }
 
-// [DELETE] /api/instructors/:id
-func InstructorDeleteById(c *fiber.Ctx) error {
-	id := c.Params("id")
-	var instructor entity.Instructor
+//// [DELETE] /api/instructors/:id
+//func InstructorDeleteById(c *fiber.Ctx) error {
+//	id := c.Params("id")
+//	var instructor entity.Instructor
+//
+//	if err := common.DBConn.First(&instructor, "id = ?", id).Error; err != nil {
+//		if errors.Is(err, gorm.ErrRecordNotFound) {
+//			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy giảng viên")
+//		}
+//		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
+//
+//	}
+//
+//	if err := common.DBConn.Delete(&instructor).Error; err != nil {
+//		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi xóa giáo viên")
+//	}
+//
+//	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", nil))
+//}
 
-	if err := common.DBConn.First(&instructor, "id = ?", id).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy giảng viên")
-		}
-		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
+// [DELETE] /api/instructors
+func InstructorDeleteList(c *fiber.Ctx) error {
+	var ids []string
+
+	if err := c.BodyParser(&ids); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Danh sách ID không hợp lệ")
 
 	}
 
-	if err := common.DBConn.Delete(&instructor).Error; err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi xóa giáo viên")
+	if err := common.DBConn.Where("id IN ?", ids).Delete(&entity.Instructor{}).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy giảng viên")
+		}
+		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi xóa giảng viên")
+	}
+
+	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", nil))
+}
+
+// [DELETE] /api/instructors/all
+func InstructorDeleteAll(c *fiber.Ctx) error {
+	if err := common.DBConn.Where("1 = 1").Delete(&entity.Instructor{}).Error; err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi xóa tất cả giảng viên")
 	}
 
 	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", nil))

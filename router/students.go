@@ -12,5 +12,7 @@ func studentsRouter(r fiber.Router) {
 	studentsRoute.Get("/:id", controllers.StudentGetById)
 	studentsRoute.Post("", controllers.StudentCreate)
 	studentsRoute.Put("/:id", controllers.StudentUpdateById)
-	studentsRoute.Delete("/:id", controllers.StudentDeleteById)
+	//studentsRoute.Delete("/:id", controllers.StudentDeleteById)
+	studentsRoute.Delete("/all", controllers.StudentDeleteAll)
+	studentsRoute.Delete("", controllers.StudentDeleteList)
 }

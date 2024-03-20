@@ -12,5 +12,7 @@ func subjectsRouter(r fiber.Router) {
 	subjectsRoute.Get("/:id", controllers.SubjectGetById)
 	subjectsRoute.Post("", controllers.SubjectCreate)
 	subjectsRoute.Put("/:id", controllers.SubjectUpdateById)
-	subjectsRoute.Delete("/:id", controllers.SubjectDeleteById)
+	//subjectsRoute.Delete("/:id", controllers.SubjectDeleteById)
+	subjectsRoute.Put("/all", controllers.SubjectDeleteAll)
+	subjectsRoute.Put("", controllers.SubjectDeleteList)
 }

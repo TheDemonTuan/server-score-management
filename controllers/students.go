@@ -142,20 +142,48 @@ func StudentUpdateById(c *fiber.Ctx) error {
 
 }
 
-// [DELETE] /api/student/:id
-func StudentDeleteById(c *fiber.Ctx) error {
-	id := c.Params("id")
-	var student entity.Student
+//// [DELETE] /api/student/:id
+//func StudentDeleteById(c *fiber.Ctx) error {
+//	id := c.Params("id")
+//	var student entity.Student
+//
+//	if err := common.DBConn.First(&student, "id = ?", id).Error; err != nil {
+//		if errors.Is(err, gorm.ErrRecordNotFound) {
+//			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy sinh viên")
+//		}
+//		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
+//	}
+//
+//	if err := common.DBConn.Delete(&student).Error; err != nil {
+//		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi xóa sinh viên")
+//	}
+//
+//	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", nil))
+//}
 
-	if err := common.DBConn.First(&student, "id = ?", id).Error; err != nil {
+// [DELETE] /api/students
+func StudentDeleteList(c *fiber.Ctx) error {
+	var ids []string
+
+	if err := c.BodyParser(&ids); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Danh sách ID không hợp lệ")
+
+	}
+
+	if err := common.DBConn.Where("id IN ?", ids).Delete(&entity.Student{}).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy sinh viên")
 		}
-		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
+		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi xóa sinh viên")
 	}
 
-	if err := common.DBConn.Delete(&student).Error; err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi xóa sinh viên")
+	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", nil))
+}
+
+// [DELETE] /api/students/all
+func StudentDeleteAll(c *fiber.Ctx) error {
+	if err := common.DBConn.Where("1 = 1").Delete(&entity.Student{}).Error; err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi xóa tất cả sinh viên")
 	}
 
 	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", nil))

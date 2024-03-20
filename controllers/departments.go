@@ -90,25 +90,53 @@ func DepartmentUpdateById(c *fiber.Ctx) error {
 	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", department))
 }
 
-// [DELETE] /api/departments/:id
-func DepartmentDeleteById(c *fiber.Ctx) error {
-	id, idErr := c.ParamsInt("id")
+//// [DELETE] /api/departments/:id
+//func DepartmentDeleteById(c *fiber.Ctx) error {
+//	id, idErr := c.ParamsInt("id")
+//
+//	if idErr != nil {
+//		return fiber.NewError(fiber.StatusBadRequest, "ID không hợp lệ")
+//	}
+//
+//	var department entity.Department
+//
+//	if err := common.DBConn.First(&department, "id = ?", id).Error; err != nil {
+//		if errors.Is(err, gorm.ErrRecordNotFound) {
+//			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy khoa")
+//		}
+//		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
+//	}
+//
+//	if err := common.DBConn.Delete(&department).Error; err != nil {
+//		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi xóa khoa")
+//	}
+//
+//	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", nil))
+//}
 
-	if idErr != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "ID không hợp lệ")
+// [DELETE] /api/departments
+func DepartmentDeleteList(c *fiber.Ctx) error {
+	var departmentIDs []int
+
+	if err := c.BodyParser(&departmentIDs); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Danh sách ID không hợp lệ")
+
 	}
 
-	var department entity.Department
-
-	if err := common.DBConn.First(&department, "id = ?", id).Error; err != nil {
+	if err := common.DBConn.Where("id IN ?", departmentIDs).Delete(&entity.Department{}).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy khoa")
 		}
-		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
+		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi xóa khoa")
 	}
 
-	if err := common.DBConn.Delete(&department).Error; err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi xóa khoa")
+	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", nil))
+}
+
+// [DELETE] /api/departments/all
+func DepartmentDeleteAll(c *fiber.Ctx) error {
+	if err := common.DBConn.Where("1 = 1").Delete(&entity.Department{}).Error; err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi xóa tất cả khoa")
 	}
 
 	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", nil))
