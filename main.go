@@ -2,7 +2,7 @@ package main
 
 import (
 	"errors"
-	"github.com/goccy/go-json"
+	"github.com/bytedance/sonic"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/compress"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -14,16 +14,18 @@ import (
 )
 
 func init() {
-	common.LoadEnvVar()
+	if os.Getenv("APP_ENV") == "development" {
+		common.LoadEnvVar()
+	}
 	common.ConnectDB()
 }
 
 func main() {
 	app := fiber.New(fiber.Config{
-		JSONEncoder:       json.Marshal,
-		JSONDecoder:       json.Unmarshal,
+		JSONEncoder:       sonic.Marshal,
+		JSONDecoder:       sonic.Unmarshal,
 		ReduceMemoryUsage: true,
-		Prefork:           false,
+		Prefork:           os.Getenv("APP_ENV") == "production",
 		CaseSensitive:     true,
 		StrictRouting:     true,
 		ServerHeader:      "Quan Ly Diem Sinh Vien",
@@ -42,14 +44,27 @@ func main() {
 	})
 
 	app.Use(helmet.New())
-	app.Use(cors.New(cors.Config{
-		AllowOrigins:     os.Getenv("CLIENT_URL"),
-		AllowCredentials: true,
-	}))
+	if os.Getenv("APP_ENV") == "production" {
+		app.Use(cors.New(cors.Config{
+			AllowOrigins:     os.Getenv("CLIENT_URL"),
+			AllowCredentials: true,
+		}))
+	} else {
+		app.Use(cors.New(cors.Config{
+			AllowCredentials: true,
+			AllowOriginsFunc: func(origin string) bool {
+				return os.Getenv("APP_ENV") == "development"
+			},
+		}))
+	}
 	app.Use(etag.New())
 	app.Use(compress.New(compress.Config{
 		Level: compress.LevelBestSpeed, // 1
 	}))
+	//app.Use(cache.New(cache.Config{
+	//	Expiration:   30 * time.Minute,
+	//	CacheControl: true,
+	//}))
 	//app.Use(logger.New())
 
 	router.SetupRouter(app)

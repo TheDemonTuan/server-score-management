@@ -5,18 +5,15 @@ import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
-	"gorm.io/gorm"
 	"os"
-	"qldiemsv/common"
-	"qldiemsv/models/entity"
 )
 
 func Protected(c *fiber.Ctx) error {
-	currentUserInfoData, err := func() (entity.User, error) {
+	currUserId, err := func() (string, error) {
 		jwtToken := c.Cookies(os.Getenv("JWT_NAME"), "")
 
 		if jwtToken == "" {
-			return entity.User{}, errors.New("JWT not found")
+			return "", errors.New("JWT not found")
 		}
 
 		token, tokenIsErr := jwt.Parse(jwtToken, func(token *jwt.Token) (interface{}, error) {
@@ -27,41 +24,32 @@ func Protected(c *fiber.Ctx) error {
 		})
 
 		if tokenIsErr != nil || !token.Valid {
-			return entity.User{}, errors.New("Invalid or expired JWT")
+			return "", errors.New("Invalid or expired JWT")
 		}
 
 		tokenClaims, tokenClaimsIsOk := token.Claims.(jwt.MapClaims)
 
 		if !tokenClaimsIsOk {
-			return entity.User{}, errors.New("Invalid JWT payload")
+			return "", errors.New("Invalid JWT payload")
 		}
 
 		userId, userIdIsOk := tokenClaims["uid"].(string)
 
 		if !userIdIsOk {
-			return entity.User{}, errors.New("Invalid JWT payload")
+			return "", errors.New("Invalid JWT payload")
 		}
 
-		var userRecord entity.User
-		if err := common.DBConn.First(&userRecord, "id = ?", userId).Error; err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return entity.User{}, errors.New("User not found")
-			}
-			return entity.User{}, errors.New("Error while fetching user")
-		}
-
-		return userRecord, nil
+		return userId, nil
 	}()
 
 	if err != nil {
 		return fiber.NewError(fiber.StatusUnauthorized, err.Error())
 	}
 
-	if currentUserInfoData == (entity.User{}) {
-		return fiber.NewError(fiber.StatusUnauthorized, "User not found")
+	if currUserId == "" {
+		return fiber.NewError(fiber.StatusUnauthorized, "Invalid JWT payload")
 	}
 
-	c.Locals("currentUserInfo", currentUserInfoData)
-
+	c.Locals("currUserId", currUserId)
 	return c.Next()
 }

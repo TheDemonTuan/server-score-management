@@ -102,10 +102,10 @@ func createJWT(c *fiber.Ctx, userId uint) error {
 	cookie := new(fiber.Cookie)
 	cookie.Name = os.Getenv("JWT_NAME")
 	cookie.Value = tokenSignedString
-	//cookie.Secure = true
+	cookie.Secure = os.Getenv("APP_ENV") == "production"
 	cookie.HTTPOnly = true
 	cookie.SameSite = "strict"
-	//cookie.Domain = ".localhost"
+	cookie.Domain = "." + os.Getenv("JWT_DOMAIN")
 	cookie.Expires = time.Now().Add(24 * time.Hour)
 	c.Cookie(cookie)
 
@@ -113,15 +113,26 @@ func createJWT(c *fiber.Ctx, userId uint) error {
 }
 
 func AuthVerify(c *fiber.Ctx) error {
-	userData, userDataIsOk := c.Locals("currentUserInfo").(entity.User)
+	currUserId, currUserIdIsOk := c.Locals("currUserId").(string)
 
-	if !userDataIsOk {
+	if !currUserIdIsOk {
 		return fiber.NewError(fiber.StatusUnauthorized, "Unauthorized")
 	}
+
+	c.Next()
+	userRecord := entity.User{}
+
+	if err := common.DBConn.First(&userRecord, "id = ?", currUserId).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fiber.NewError(fiber.StatusUnauthorized, "Không tìm thấy user")
+		}
+		return fiber.NewError(fiber.StatusInternalServerError, "Có lỗi trong khi truy vấn cơ sở dữ liệu")
+	}
+
 	return c.JSON(common.NewResponse(
 		fiber.StatusOK,
 		"Success",
-		userData),
+		userRecord),
 	)
 }
 
