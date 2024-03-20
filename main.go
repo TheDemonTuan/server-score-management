@@ -6,6 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/compress"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/encryptcookie"
 	"github.com/gofiber/fiber/v2/middleware/etag"
 	"github.com/gofiber/fiber/v2/middleware/helmet"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -24,8 +25,8 @@ func main() {
 	app := fiber.New(fiber.Config{
 		JSONEncoder:       sonic.Marshal,
 		JSONDecoder:       sonic.Unmarshal,
-		ReduceMemoryUsage: true,
-		Prefork:           false,
+		ReduceMemoryUsage: false,
+		Prefork:           true,
 		CaseSensitive:     true,
 		StrictRouting:     true,
 		ServerHeader:      "Quan Ly Diem Sinh Vien",
@@ -45,8 +46,8 @@ func main() {
 
 	app.Use(helmet.New())
 	app.Use(cors.New(cors.Config{
-		AllowCredentials: true,
 		AllowOrigins:     os.Getenv("CLIENT_URL"),
+		AllowCredentials: true,
 	}))
 	app.Use(etag.New())
 	app.Use(compress.New(compress.Config{
@@ -55,32 +56,17 @@ func main() {
 	if os.Getenv("APP_ENV") == "development" {
 		app.Use(logger.New())
 	}
-	app.Get("/metrics", monitor.New(monitor.Config{Title: "Quan Ly Diem Sinh Vien Metrics"}))
+	app.Use(encryptcookie.New(encryptcookie.Config{
+		Key:    os.Getenv("COOKIE_SECRET"),
+		Except: []string{os.Getenv("JWT_NAME")},
+	}))
 
-	//store := session.New(session.Config{
-	//
-	//	Expiration:   1 * time.Hour,
-	//	KeyGenerator: utils.UUIDv4,
-	//})
-	//
-	//app.Use(csrf.New(csrf.Config{
-	//	KeyLookup:         "header:" + csrf.HeaderName,
-	//	CookieName:        "__Host-csrf_",
-	//	CookieSameSite:    "Lax",
-	//	CookieSecure:      true,
-	//	CookieSessionOnly: true,
-	//	CookieHTTPOnly:    true,
-	//	Expiration:        1 * time.Hour,
-	//	KeyGenerator:      utils.UUIDv4,
-	//	Session:           store,
-	//	SessionKey:        "fiber.csrf.token",
-	//	HandlerContextKey: "fiber.csrf.handler",
-	//}))
+	app.Get("/metrics", monitor.New(monitor.Config{Title: "Quan Ly Diem Sinh Vien Metrics"}))
 
 	router.SetupRouter(app)
 
 	err := app.Listen(":" + os.Getenv("PORT"))
 	if err != nil {
-		panic("Error while starting server")
+		panic(err)
 	}
 }

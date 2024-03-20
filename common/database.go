@@ -4,7 +4,6 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-	"log"
 	"os"
 )
 
@@ -39,6 +38,6 @@ func runMigrate() {
 		//if err := DBConn.AutoMigrate(&entity.Department{}, &entity.Instructor{}, &entity.Subject{}, &entity.Student{}, &entity.Grade{}, &entity.Class{}, &entity.Assignment{}, &entity.User{}); err != nil {
 		//	panic(err)
 		//}
-		log.Println("Success to migrate")
+		//log.Println("Success to migrate")
 	}
 }

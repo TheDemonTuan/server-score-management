@@ -1,6 +1,6 @@
-tmp
+/tmp
 /.idea
-.github
+/.github
 .dockerignore
 Dockerfile
 fly.toml

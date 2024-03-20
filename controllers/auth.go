@@ -14,6 +14,36 @@ import (
 	"time"
 )
 
+func createJWT(c *fiber.Ctx, userId uint) error {
+	// Create the Claims
+	claims := jwt.MapClaims{
+		"uid": strconv.Itoa(int(userId)),
+		"exp": time.Now().Add(time.Hour * 24).Unix(),
+	}
+
+	// Create token
+	token := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
+	tokenSignedString, tokenSignedErr := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+
+	if tokenSignedErr != nil {
+		return errors.New("Có lỗi trong khi tạo token")
+	}
+	//Create cookie
+	cookie := new(fiber.Cookie)
+	cookie.Name = os.Getenv("JWT_NAME")
+	cookie.Path = "/"
+	cookie.Value = tokenSignedString
+	cookie.Secure = os.Getenv("APP_ENV") == "production"
+	cookie.HTTPOnly = true
+	cookie.SameSite = "strict"
+	if os.Getenv("APP_ENV") == "production" {
+		cookie.Domain = "." + os.Getenv("JWT_DOMAIN")
+	}
+	cookie.Expires = time.Now().Add(24 * time.Hour)
+	c.Cookie(cookie)
+	return nil
+}
+
 func AuthLogin(c *fiber.Ctx) error {
 	bodyData, err := common.Validator[req.AuthLogin](c)
 
@@ -84,45 +114,16 @@ func AuthRegister(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(common.NewResponse(fiber.StatusOK, "Đăng ký tài khoản thành công", newUser))
 }
 
-func createJWT(c *fiber.Ctx, userId uint) error {
-	// Create the Claims
-	claims := jwt.MapClaims{
-		"uid": strconv.Itoa(int(userId)),
-		"exp": time.Now().Add(time.Hour * 24).Unix(),
-	}
-
-	// Create token
-	token := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
-	tokenSignedString, tokenSignedErr := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
-
-	if tokenSignedErr != nil {
-		return errors.New("Có lỗi trong khi tạo token")
-	}
-	//Create cookie
-	cookie := new(fiber.Cookie)
-	cookie.Name = os.Getenv("JWT_NAME")
-	cookie.Value = tokenSignedString
-	cookie.Secure = os.Getenv("APP_ENV") == "production"
-	cookie.HTTPOnly = true
-	cookie.SameSite = "strict"
-	cookie.Domain = "." + os.Getenv("JWT_DOMAIN")
-	cookie.Expires = time.Now().Add(24 * time.Hour)
-	c.Cookie(cookie)
-
-	return nil
-}
-
 func AuthVerify(c *fiber.Ctx) error {
-	currUserId, currUserIdIsOk := c.Locals("currUserId").(string)
+	currentUserId, currentUserIdIsOk := c.Locals("currentUserId").(string)
 
-	if !currUserIdIsOk {
+	if !currentUserIdIsOk {
 		return fiber.NewError(fiber.StatusUnauthorized, "Unauthorized")
 	}
 
-	c.Next()
 	userRecord := entity.User{}
 
-	if err := common.DBConn.First(&userRecord, "id = ?", currUserId).Error; err != nil {
+	if err := common.DBConn.First(&userRecord, "id = ?", currentUserId).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return fiber.NewError(fiber.StatusUnauthorized, "Không tìm thấy user")
 		}
@@ -139,9 +140,8 @@ func AuthVerify(c *fiber.Ctx) error {
 func AuthLogout(c *fiber.Ctx) error {
 	cookie := new(fiber.Cookie)
 	cookie.Name = os.Getenv("JWT_NAME")
-	cookie.Value = ""
-	cookie.Expires = time.Now().Add(-24 * time.Hour)
+	cookie.Value = "t"
 	c.Cookie(cookie)
-	c.ClearCookie(os.Getenv("JWT_NAME"))
+	c.ClearCookie()
 	return c.JSON(common.NewResponse(fiber.StatusOK, "Đăng xuất thành công", nil))
 }

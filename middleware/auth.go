@@ -1,55 +1,37 @@
 package middleware
 
 import (
-	"errors"
-	"fmt"
+	jwtware "github.com/gofiber/contrib/jwt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 	"os"
 )
 
-func Protected(c *fiber.Ctx) error {
-	currUserId, err := func() (string, error) {
-		jwtToken := c.Cookies(os.Getenv("JWT_NAME"), "")
+func Protected() fiber.Handler {
+	return jwtware.New(jwtware.Config{
+		SigningKey:     jwtware.SigningKey{Key: []byte(os.Getenv("JWT_SECRET"))},
+		SuccessHandler: jwtSuccess,
+		ErrorHandler:   jwtError,
+	})
+}
 
-		if jwtToken == "" {
-			return "", errors.New("JWT not found")
-		}
-
-		token, tokenIsErr := jwt.Parse(jwtToken, func(token *jwt.Token) (interface{}, error) {
-			if _, isOk := token.Method.(*jwt.SigningMethodHMAC); !isOk {
-				return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
-			}
-			return []byte(os.Getenv("JWT_SECRET")), nil
-		})
-
-		if tokenIsErr != nil || !token.Valid {
-			return "", errors.New("Invalid or expired JWT")
-		}
-
-		tokenClaims, tokenClaimsIsOk := token.Claims.(jwt.MapClaims)
-
-		if !tokenClaimsIsOk {
-			return "", errors.New("Invalid JWT payload")
-		}
-
-		userId, userIdIsOk := tokenClaims["uid"].(string)
-
-		if !userIdIsOk {
-			return "", errors.New("Invalid JWT payload")
-		}
-
-		return userId, nil
-	}()
-
-	if err != nil {
-		return fiber.NewError(fiber.StatusUnauthorized, err.Error())
+func jwtSuccess(c *fiber.Ctx) error {
+	user := c.Locals("user").(*jwt.Token)
+	claims := user.Claims.(jwt.MapClaims)
+	uid, ok := claims["uid"].(string)
+	if !ok {
+		return fiber.NewError(fiber.StatusUnauthorized, "Invalid or expired JWT")
 	}
+	c.Locals("currentUserId", uid)
 
-	if currUserId == "" {
-		return fiber.NewError(fiber.StatusUnauthorized, "Invalid JWT payload")
-	}
-
-	c.Locals("currUserId", currUserId)
 	return c.Next()
+}
+
+func jwtError(c *fiber.Ctx, err error) error {
+	if err.Error() == "Missing or malformed JWT" {
+		return c.Status(fiber.StatusBadRequest).
+			JSON(fiber.Map{"status": "error", "message": "Missing or malformed JWT", "data": nil})
+	}
+	return c.Status(fiber.StatusUnauthorized).
+		JSON(fiber.Map{"status": "error", "message": "Invalid or expired JWT", "data": nil})
 }
