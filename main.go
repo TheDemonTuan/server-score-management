@@ -8,15 +8,15 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/etag"
 	"github.com/gofiber/fiber/v2/middleware/helmet"
+	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/fiber/v2/middleware/monitor"
 	"os"
 	"qldiemsv/common"
 	"qldiemsv/router"
 )
 
 func init() {
-	if os.Getenv("APP_ENV") == "development" {
-		common.LoadEnvVar()
-	}
+	common.LoadEnvVar()
 	common.ConnectDB()
 }
 
@@ -25,7 +25,7 @@ func main() {
 		JSONEncoder:       sonic.Marshal,
 		JSONDecoder:       sonic.Unmarshal,
 		ReduceMemoryUsage: true,
-		Prefork:           os.Getenv("APP_ENV") == "production",
+		Prefork:           false,
 		CaseSensitive:     true,
 		StrictRouting:     true,
 		ServerHeader:      "Quan Ly Diem Sinh Vien",
@@ -44,34 +44,43 @@ func main() {
 	})
 
 	app.Use(helmet.New())
-	if os.Getenv("APP_ENV") == "production" {
-		app.Use(cors.New(cors.Config{
-			AllowOrigins:     os.Getenv("CLIENT_URL"),
-			AllowCredentials: true,
-		}))
-	} else {
-		app.Use(cors.New(cors.Config{
-			AllowCredentials: true,
-			AllowOriginsFunc: func(origin string) bool {
-				return os.Getenv("APP_ENV") == "development"
-			},
-		}))
-	}
+	app.Use(cors.New(cors.Config{
+		AllowCredentials: true,
+		AllowOrigins:     os.Getenv("CLIENT_URL"),
+	}))
 	app.Use(etag.New())
 	app.Use(compress.New(compress.Config{
 		Level: compress.LevelBestSpeed, // 1
 	}))
-	//app.Use(cache.New(cache.Config{
-	//	Expiration:   30 * time.Minute,
-	//	CacheControl: true,
+	if os.Getenv("APP_ENV") == "development" {
+		app.Use(logger.New())
+	}
+	app.Get("/metrics", monitor.New(monitor.Config{Title: "Quan Ly Diem Sinh Vien Metrics"}))
+
+	//store := session.New(session.Config{
+	//
+	//	Expiration:   1 * time.Hour,
+	//	KeyGenerator: utils.UUIDv4,
+	//})
+	//
+	//app.Use(csrf.New(csrf.Config{
+	//	KeyLookup:         "header:" + csrf.HeaderName,
+	//	CookieName:        "__Host-csrf_",
+	//	CookieSameSite:    "Lax",
+	//	CookieSecure:      true,
+	//	CookieSessionOnly: true,
+	//	CookieHTTPOnly:    true,
+	//	Expiration:        1 * time.Hour,
+	//	KeyGenerator:      utils.UUIDv4,
+	//	Session:           store,
+	//	SessionKey:        "fiber.csrf.token",
+	//	HandlerContextKey: "fiber.csrf.handler",
 	//}))
-	//app.Use(logger.New())
 
 	router.SetupRouter(app)
 
 	err := app.Listen(":" + os.Getenv("PORT"))
 	if err != nil {
 		panic("Error while starting server")
-		return
 	}
 }

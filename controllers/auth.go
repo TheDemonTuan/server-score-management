@@ -142,5 +142,6 @@ func AuthLogout(c *fiber.Ctx) error {
 	cookie.Value = ""
 	cookie.Expires = time.Now().Add(-24 * time.Hour)
 	c.Cookie(cookie)
+	c.ClearCookie(os.Getenv("JWT_NAME"))
 	return c.JSON(common.NewResponse(fiber.StatusOK, "Đăng xuất thành công", nil))
 }
