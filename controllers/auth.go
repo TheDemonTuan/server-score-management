@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-func createJWT(c *fiber.Ctx, userId uint) error {
+func createJWT(userId uint) (string, error) {
 	// Create the Claims
 	claims := jwt.MapClaims{
 		"uid": strconv.Itoa(int(userId)),
@@ -26,22 +26,10 @@ func createJWT(c *fiber.Ctx, userId uint) error {
 	tokenSignedString, tokenSignedErr := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 
 	if tokenSignedErr != nil {
-		return errors.New("Có lỗi trong khi tạo token")
+		return "", errors.New("Có lỗi trong khi tạo token")
 	}
 	//Create cookie
-	cookie := new(fiber.Cookie)
-	cookie.Name = os.Getenv("JWT_NAME")
-	cookie.Path = "/"
-	cookie.Value = tokenSignedString
-	cookie.Secure = true
-	cookie.HTTPOnly = true
-	cookie.SameSite = "strict"
-	if os.Getenv("APP_ENV") == "production" {
-		cookie.Domain = "." + os.Getenv("JWT_DOMAIN")
-	}
-	cookie.Expires = time.Now().Add(24 * time.Hour)
-	c.Cookie(cookie)
-	return nil
+	return tokenSignedString, nil
 }
 
 func AuthLogin(c *fiber.Ctx) error {
@@ -64,9 +52,13 @@ func AuthLogin(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "Mật khẩu không đúng")
 	}
 
-	if err := createJWT(c, userRecord.ID); err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	token, tokenIsErr := createJWT(userRecord.ID)
+
+	if tokenIsErr != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, tokenIsErr.Error())
 	}
+
+	c.Set("TDT-Auth-Token", token)
 
 	return c.Status(fiber.StatusOK).JSON(common.NewResponse(fiber.StatusOK, "Đăng nhập thành công", userRecord))
 }
@@ -107,11 +99,15 @@ func AuthRegister(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusInternalServerError, "Có lỗi trong khi tạo tài khoản")
 	}
 
-	if err := createJWT(c, newUser.ID); err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	token, tokenIsErr := createJWT(newUser.ID)
+
+	if tokenIsErr != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, tokenIsErr.Error())
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(common.NewResponse(fiber.StatusOK, "Đăng ký tài khoản thành công", newUser))
+	c.Set("TDT-Auth-Token", token)
+
+	return c.Status(fiber.StatusCreated).JSON(common.NewResponse(fiber.StatusOK, "Đăng ký thành công", newUser))
 }
 
 func AuthVerify(c *fiber.Ctx) error {
