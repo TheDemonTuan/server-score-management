@@ -8,7 +8,7 @@ import (
 func assignmentsRouter(r fiber.Router) {
 	assignmentsRoute := r.Group("assignments")
 
-	assignmentsRoute.Add("GET", "", controllers.AssignmentGetList)
+	assignmentsRoute.Add("GET", "", controllers.AssignmentGetAll)
 	assignmentsRoute.Add("GET", ":id", controllers.AssignmentGetById)
 	assignmentsRoute.Add("POST", "", controllers.AssignmentCreate)
 	assignmentsRoute.Add("PUT", ":id", controllers.AssignmentUpdateById)

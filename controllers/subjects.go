@@ -23,7 +23,7 @@ func SubjectGetAll(c *fiber.Ctx) error {
 
 	var subjects []entity.Subject
 
-	if err := common.DBConn.Preload("Grades").Find(&subjects).Error; err != nil {
+	if err := common.DBConn.Preload("Grades").Preload("Assignments").Find(&subjects).Error; err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
 	}
 
@@ -65,7 +65,7 @@ func SubjectGetById(c *fiber.Ctx) error {
 	id := c.Params("id")
 	var subject entity.Subject
 
-	if err := common.DBConn.Preload("Transcripts").First(&subject, "id = ?", id).Error; err != nil {
+	if err := common.DBConn.Preload("Grades").Preload("Assignments").First(&subject, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy môn học")
 		}
@@ -131,17 +131,17 @@ func SubjectDeleteById(c *fiber.Ctx) error {
 
 // [DELETE] /api/subjects/list
 func SubjectDeleteByListId(c *fiber.Ctx) error {
-	var ids []string
+	bodyData, err := common.Validator[req.SubjectDeleteByListId](c)
 
-	if err := c.BodyParser(&ids); err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "Danh sách ID không hợp lệ")
+	if err != nil || bodyData == nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
-	if err := common.DBConn.Where("id IN ?", ids).Delete(&entity.Subject{}).Error; err != nil {
+	if err := common.DBConn.Where("id IN ?", bodyData.ListId).Delete(&entity.Subject{}).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy môn học")
 		}
-		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi xóa môn học")
+		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi xóa nhiều môn học")
 	}
 
 	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", nil))

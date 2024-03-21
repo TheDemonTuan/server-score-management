@@ -116,18 +116,17 @@ func DepartmentDeleteById(c *fiber.Ctx) error {
 
 // [DELETE] /api/departments/list
 func DepartmentDeleteByListId(c *fiber.Ctx) error {
-	var departmentIDs []int
+	bodyData, err := common.Validator[req.DepartmentDeleteByListId](c)
 
-	if err := c.BodyParser(&departmentIDs); err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "Danh sách ID không hợp lệ")
-
+	if err != nil || bodyData == nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
-	if err := common.DBConn.Where("id IN ?", departmentIDs).Delete(&entity.Department{}).Error; err != nil {
+	if err := common.DBConn.Where("id IN ?", bodyData.ListId).Delete(&entity.Department{}).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy khoa")
 		}
-		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi xóa khoa")
+		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi xóa nhiều khoa")
 	}
 
 	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", nil))

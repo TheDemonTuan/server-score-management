@@ -25,3 +25,7 @@ type InstructorUpdateById struct {
 	Gender       bool      `json:"gender" validate:"boolean"`
 	DepartmentID uint      `json:"department_id" validate:"required"`
 }
+
+type InstructorDeleteByListId struct {
+	ListId []int `json:"list_id" validate:"required,min=1"`
+}

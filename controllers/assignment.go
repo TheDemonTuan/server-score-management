@@ -1,15 +1,18 @@
 package controllers
 
 import (
+	"errors"
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
 	"qldiemsv/common"
 	"qldiemsv/models/entity"
 	"qldiemsv/models/req"
 )
 
 // [GET] /api/assignments
-func AssignmentGetList(c *fiber.Ctx) error {
+func AssignmentGetAll(c *fiber.Ctx) error {
 	var assignments []entity.Assignment
+
 	if err := common.DBConn.Find(&assignments).Error; err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
 	}
@@ -25,15 +28,23 @@ func AssignmentCreate(c *fiber.Ctx) error {
 	if err != nil || bodyData == nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
+
 	var subject entity.Subject
 	if err := common.DBConn.First(&subject, "id = ?", bodyData.SubjectID).Error; err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy môn học")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy môn học")
+		}
+		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
 	}
 
 	var instructor entity.Instructor
 	if err := common.DBConn.First(&instructor, "id = ?", bodyData.InstructorID).Error; err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy giảng viên")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy giảng viên")
+		}
+		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
 	}
+
 	if instructor.DepartmentID != subject.DepartmentID {
 		return fiber.NewError(fiber.StatusBadRequest, "Giảng viên không thuộc khoa của môn học")
 	}
@@ -44,7 +55,7 @@ func AssignmentCreate(c *fiber.Ctx) error {
 	}
 
 	if err := common.DBConn.First(&newAssignment, "subject_id = ? AND instructor_id = ?", bodyData.SubjectID, bodyData.InstructorID).Error; err == nil {
-		return fiber.NewError(fiber.StatusBadRequest, "Phân công đã tồn tại")
+		return fiber.NewError(fiber.StatusBadRequest, "Giảng viên đã được phân công môn học này")
 	}
 
 	if err := common.DBConn.Create(&newAssignment).Error; err != nil {
@@ -55,9 +66,12 @@ func AssignmentCreate(c *fiber.Ctx) error {
 
 // [GET] /api/assignments/:id
 func AssignmentGetById(c *fiber.Ctx) error {
-	id := c.Params("id")
+	assignmentId := c.Params("id")
 	var assignment entity.Assignment
-	if err := common.DBConn.First(&assignment, "id = ?", id).Error; err != nil {
+	if err := common.DBConn.First(&assignment, "id = ?", assignmentId).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy môn học")
+		}
 		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
 	}
 	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", assignment))

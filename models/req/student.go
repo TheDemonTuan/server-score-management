@@ -25,3 +25,7 @@ type StudentUpdateById struct {
 	DepartmentID uint      `json:"department_id" validate:"required"`
 	ClassID      uint      `json:"class_id" validate:"required"`
 }
+
+type StudentDeleteByListId struct {
+	ListId []int `json:"list_id" validate:"required,min=1"`
+}

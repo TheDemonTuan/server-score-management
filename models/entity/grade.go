@@ -5,7 +5,7 @@ import (
 )
 
 type Grade struct {
-	ID           uint    `gorm:"primaryKey;autoIncrement"`
+	ID           uint    `json:"id" gorm:"primaryKey;autoIncrement"`
 	ProcessScore float64 `json:"process_score"`
 	MidtermScore float64 `json:"midterm_score"`
 	FinalScore   float64 `json:"final_score"`

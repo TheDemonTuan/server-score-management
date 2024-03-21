@@ -58,7 +58,7 @@ func AuthLogin(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusInternalServerError, tokenIsErr.Error())
 	}
 
-	c.Set("TDT-Auth-Token", token)
+	c.Set(os.Getenv("JWT_HEADER"), token)
 
 	return c.Status(fiber.StatusOK).JSON(common.NewResponse(fiber.StatusOK, "Đăng nhập thành công", userRecord))
 }
@@ -105,7 +105,7 @@ func AuthRegister(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusInternalServerError, tokenIsErr.Error())
 	}
 
-	c.Set("TDT-Auth-Token", token)
+	c.Set(os.Getenv("JWT_HEADER"), token)
 
 	return c.Status(fiber.StatusCreated).JSON(common.NewResponse(fiber.StatusOK, "Đăng ký thành công", newUser))
 }

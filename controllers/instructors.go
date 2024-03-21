@@ -166,18 +166,17 @@ func InstructorDeleteById(c *fiber.Ctx) error {
 
 // [DELETE] /api/instructors/list
 func InstructorDeleteByListId(c *fiber.Ctx) error {
-	var ids []string
+	bodyData, err := common.Validator[req.InstructorDeleteByListId](c)
 
-	if err := c.BodyParser(&ids); err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "Danh sách ID không hợp lệ")
-
+	if err != nil || bodyData == nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
-	if err := common.DBConn.Where("id IN ?", ids).Delete(&entity.Instructor{}).Error; err != nil {
+	if err := common.DBConn.Where("id IN ?", bodyData.ListId).Delete(&entity.Instructor{}).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy giảng viên")
 		}
-		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi xóa giảng viên")
+		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi xóa nhiều giảng viên")
 	}
 
 	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", nil))

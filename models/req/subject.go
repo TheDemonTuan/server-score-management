@@ -17,3 +17,7 @@ type SubjectUpdateById struct {
 	FinalPercentage   int8   `json:"final_percentage" validate:"required,gte=50,lte=100"`
 	DepartmentID      uint   `json:"department_id" validate:"required"`
 }
+
+type SubjectDeleteByListId struct {
+	ListId []int `json:"list_id" validate:"required,min=1"`
+}

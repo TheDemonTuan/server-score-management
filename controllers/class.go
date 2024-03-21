@@ -1,7 +1,9 @@
 package controllers
 
 import (
+	"errors"
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
 	"qldiemsv/common"
 	"qldiemsv/models/entity"
 	"qldiemsv/models/req"
@@ -23,10 +25,10 @@ func ClassGetAll(c *fiber.Ctx) error {
 
 // [GET] /api/classes/:id
 func ClassGetById(c *fiber.Ctx) error {
-	id := c.Params("id")
+	classId := c.Params("id")
 	var class entity.Class
 
-	if err := common.DBConn.Preload("Students").First(&class, "id = ?", id).Error; err != nil {
+	if err := common.DBConn.Preload("Students").First(&class, "id = ?", classId).Error; err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
 	}
 
@@ -35,7 +37,7 @@ func ClassGetById(c *fiber.Ctx) error {
 
 // [POST] /api/classes
 func ClassCreate(c *fiber.Ctx) error {
-	bodyData, err := common.Validator[req.CreateClass](c)
+	bodyData, err := common.Validator[req.ClassCreate](c)
 
 	if err != nil || bodyData == nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
@@ -57,8 +59,8 @@ func ClassCreate(c *fiber.Ctx) error {
 
 // [PUT] /api/classes/:id
 func ClassUpdateById(c *fiber.Ctx) error {
-	id := c.Params("id")
-	bodyData, err := common.Validator[req.UpdateClass](c)
+	classId := c.Params("id")
+	bodyData, err := common.Validator[req.ClassUpdateById](c)
 
 	if err != nil || bodyData == nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
@@ -66,7 +68,7 @@ func ClassUpdateById(c *fiber.Ctx) error {
 
 	var class entity.Class
 
-	if err := common.DBConn.First(&class, "id = ?", id).Error; err != nil {
+	if err := common.DBConn.First(&class, "id = ?", classId).Error; err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy lớp")
 	}
 
@@ -84,10 +86,10 @@ func ClassUpdateById(c *fiber.Ctx) error {
 
 // [DELETE] /api/classes/:id
 func ClassDeleteById(c *fiber.Ctx) error {
-	id := c.Params("id")
+	classId := c.Params("id")
 	var class entity.Class
 
-	if err := common.DBConn.First(&class, "id = ?", id).Error; err != nil {
+	if err := common.DBConn.First(&class, "id = ?", classId).Error; err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy lớp")
 	}
 
@@ -98,7 +100,7 @@ func ClassDeleteById(c *fiber.Ctx) error {
 	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", nil))
 }
 
-// [DELETE] /api/classess
+// [DELETE] /api/classes
 func ClassDeleteAll(c *fiber.Ctx) error {
 	if err := common.DBConn.Where("1 = 1").Delete(&entity.Class{}).Error; err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi xóa tất cả lớp")
@@ -109,14 +111,17 @@ func ClassDeleteAll(c *fiber.Ctx) error {
 
 // [DELETE] /api/classes/list
 func ClassDeleteByListId(c *fiber.Ctx) error {
-	var ids []string
+	bodyData, err := common.Validator[req.ClassDeleteByListId](c)
 
-	if err := c.BodyParser(&ids); err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "Danh sách ID không hợp lệ")
+	if err != nil || bodyData == nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
-	if err := common.DBConn.Where("id IN ?", ids).Delete(&entity.Class{}).Error; err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi xóa lớp")
+	if err := common.DBConn.Where("id IN ?", bodyData.ListId).Delete(&entity.Class{}).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy lớp")
+		}
+		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi xóa nhiều lớp")
 	}
 	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", nil))
 }
