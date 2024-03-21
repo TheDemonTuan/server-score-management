@@ -11,7 +11,7 @@ type InstructorCreate struct {
 	BirthDay     time.Time `json:"birth_day" validate:"required"`
 	Phone        string    `json:"phone" validate:"required,min=10,max=11"`
 	Gender       bool      `json:"gender" validate:"boolean"`
-	DepartmentID uint      `json:"department_id" validate:"required,number"`
+	DepartmentID uint      `json:"department_id" validate:"required"`
 }
 
 type InstructorUpdateById struct {
@@ -23,5 +23,5 @@ type InstructorUpdateById struct {
 	BirthDay     time.Time `json:"birth_day" validate:"required"`
 	Phone        string    `json:"phone" validate:"required,min=10,max=11"`
 	Gender       bool      `json:"gender" validate:"boolean"`
-	DepartmentID uint      `json:"department_id" validate:"required,number"`
+	DepartmentID uint      `json:"department_id" validate:"required"`
 }

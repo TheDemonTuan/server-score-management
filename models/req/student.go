@@ -11,6 +11,7 @@ type StudentCreate struct {
 	Phone        string    `json:"phone" validate:"required,max=20"`
 	Gender       bool      `json:"gender" validate:"required,boolean"`
 	DepartmentID uint      `json:"department_id" validate:"required"`
+	ClassID      uint      `json:"class_id" validate:"required"`
 }
 
 type StudentUpdateById struct {
@@ -22,4 +23,5 @@ type StudentUpdateById struct {
 	Phone        string    `json:"phone" validate:"required,max=20"`
 	Gender       bool      `json:"gender" validate:"required,boolean"`
 	DepartmentID uint      `json:"department_id" validate:"required"`
+	ClassID      uint      `json:"class_id" validate:"required"`
 }

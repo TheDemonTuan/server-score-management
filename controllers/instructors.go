@@ -20,7 +20,7 @@ func generateInstructorID(departmentID uint) string {
 }
 
 // [GET] /api/instructors
-func InstructorGetList(c *fiber.Ctx) error {
+func InstructorGetAll(c *fiber.Ctx) error {
 	var instructors []entity.Instructor
 
 	if err := common.DBConn.Preload("Classes").Preload("Grades").Preload("Assignments").Find(&instructors).Error; err != nil {
@@ -116,15 +116,13 @@ func InstructorUpdateById(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
 	}
 
-	var logicInstructor entity.Instructor
-
-	if err := common.DBConn.First(&logicInstructor, "email = ? or phone = ?", bodyData.Email, bodyData.Phone).Error; err != nil {
+	if err := common.DBConn.First(&instructor, "id <> ? and email = ? or phone = ?", instructor.ID, bodyData.Email, bodyData.Phone).Error; err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
 		}
 	}
 
-	if logicInstructor.ID != "" && instructor.ID != instructorID {
+	if instructor.ID != "" {
 		return fiber.NewError(fiber.StatusBadRequest, "Email hoặc số điện thoại đã tồn tại")
 	}
 	//End logic check
@@ -146,28 +144,28 @@ func InstructorUpdateById(c *fiber.Ctx) error {
 	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", instructor))
 }
 
-//// [DELETE] /api/instructors/:id
-//func InstructorDeleteById(c *fiber.Ctx) error {
-//	id := c.Params("id")
-//	var instructor entity.Instructor
-//
-//	if err := common.DBConn.First(&instructor, "id = ?", id).Error; err != nil {
-//		if errors.Is(err, gorm.ErrRecordNotFound) {
-//			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy giảng viên")
-//		}
-//		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
-//
-//	}
-//
-//	if err := common.DBConn.Delete(&instructor).Error; err != nil {
-//		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi xóa giáo viên")
-//	}
-//
-//	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", nil))
-//}
+// [DELETE] /api/instructors/:id
+func InstructorDeleteById(c *fiber.Ctx) error {
+	id := c.Params("id")
+	var instructor entity.Instructor
 
-// [DELETE] /api/instructors
-func InstructorDeleteList(c *fiber.Ctx) error {
+	if err := common.DBConn.First(&instructor, "id = ?", id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy giảng viên")
+		}
+		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
+
+	}
+
+	if err := common.DBConn.Delete(&instructor).Error; err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi xóa giáo viên")
+	}
+
+	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", nil))
+}
+
+// [DELETE] /api/instructors/list
+func InstructorDeleteByListId(c *fiber.Ctx) error {
 	var ids []string
 
 	if err := c.BodyParser(&ids); err != nil {
@@ -185,7 +183,7 @@ func InstructorDeleteList(c *fiber.Ctx) error {
 	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", nil))
 }
 
-// [DELETE] /api/instructors/all
+// [DELETE] /api/instructors
 func InstructorDeleteAll(c *fiber.Ctx) error {
 	if err := common.DBConn.Where("1 = 1").Delete(&entity.Instructor{}).Error; err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi xóa tất cả giảng viên")

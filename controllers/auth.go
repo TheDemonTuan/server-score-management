@@ -33,7 +33,7 @@ func createJWT(c *fiber.Ctx, userId uint) error {
 	cookie.Name = os.Getenv("JWT_NAME")
 	cookie.Path = "/"
 	cookie.Value = tokenSignedString
-	cookie.Secure = os.Getenv("APP_ENV") == "production"
+	cookie.Secure = true
 	cookie.HTTPOnly = true
 	cookie.SameSite = "strict"
 	if os.Getenv("APP_ENV") == "production" {
@@ -135,13 +135,4 @@ func AuthVerify(c *fiber.Ctx) error {
 		"Success",
 		userRecord),
 	)
-}
-
-func AuthLogout(c *fiber.Ctx) error {
-	cookie := new(fiber.Cookie)
-	cookie.Name = os.Getenv("JWT_NAME")
-	cookie.Value = "t"
-	c.Cookie(cookie)
-	c.ClearCookie()
-	return c.JSON(common.NewResponse(fiber.StatusOK, "Đăng xuất thành công", nil))
 }

@@ -6,11 +6,9 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/compress"
 	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/encryptcookie"
 	"github.com/gofiber/fiber/v2/middleware/etag"
 	"github.com/gofiber/fiber/v2/middleware/helmet"
 	"github.com/gofiber/fiber/v2/middleware/logger"
-	"github.com/gofiber/fiber/v2/middleware/monitor"
 	"os"
 	"qldiemsv/common"
 	"qldiemsv/router"
@@ -25,12 +23,11 @@ func main() {
 	app := fiber.New(fiber.Config{
 		JSONEncoder:       sonic.Marshal,
 		JSONDecoder:       sonic.Unmarshal,
-		ReduceMemoryUsage: false,
-		Prefork:           true,
 		CaseSensitive:     true,
 		StrictRouting:     true,
-		ServerHeader:      "Quan Ly Diem Sinh Vien",
-		AppName:           "Quan Ly Diem Sinh Vien v1.0.0",
+		EnablePrintRoutes: false,
+		ServerHeader:      "API Quan Ly Diem Sinh Vien",
+		AppName:           "API Quan Ly Diem Sinh Vien",
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			code := fiber.StatusInternalServerError
 			var e *fiber.Error
@@ -56,12 +53,10 @@ func main() {
 	if os.Getenv("APP_ENV") == "development" {
 		app.Use(logger.New())
 	}
-	app.Use(encryptcookie.New(encryptcookie.Config{
-		Key:    os.Getenv("COOKIE_SECRET"),
-		Except: []string{os.Getenv("JWT_NAME")},
-	}))
-
-	app.Get("/metrics", monitor.New(monitor.Config{Title: "Quan Ly Diem Sinh Vien Metrics"}))
+	//app.Use(encryptcookie.New(encryptcookie.Config{
+	//	Key:    os.Getenv("COOKIE_SECRET"),
+	//	Except: []string{os.Getenv("JWT_NAME")},
+	//}))
 
 	router.SetupRouter(app)
 

@@ -8,11 +8,11 @@ import (
 func instructorsRouter(r fiber.Router) {
 	instructorsRoute := r.Group("instructors")
 
-	instructorsRoute.Get("", controllers.InstructorGetList)
-	instructorsRoute.Get("/:id", controllers.InstructorGetById)
-	instructorsRoute.Post("", controllers.InstructorCreate)
-	instructorsRoute.Put("/:id", controllers.InstructorUpdateById)
-	//instructorsRoute.Delete("/:id", controllers.InstructorDeleteById)
-	instructorsRoute.Delete("/all", controllers.InstructorDeleteAll)
-	instructorsRoute.Delete("", controllers.InstructorDeleteList)
+	instructorsRoute.Add("GET", "", controllers.InstructorGetAll)
+	instructorsRoute.Add("GET", ":id", controllers.InstructorGetById)
+	instructorsRoute.Add("POST", "", controllers.InstructorCreate)
+	instructorsRoute.Add("PUT", ":id", controllers.InstructorUpdateById)
+	instructorsRoute.Add("DELETE", "", controllers.InstructorDeleteAll)
+	instructorsRoute.Add("DELETE", "list", controllers.InstructorDeleteByListId)
+	instructorsRoute.Add("DELETE", ":id", controllers.InstructorDeleteById)
 }

@@ -9,8 +9,7 @@ import (
 func authRouter(r fiber.Router) {
 	authRoute := r.Group("auth")
 
-	authRoute.Post("login", controllers.AuthLogin)
-	authRoute.Post("register", controllers.AuthRegister)
-	authRoute.Get("verify", middleware.Protected(), controllers.AuthVerify)
-	authRoute.Delete("logout", middleware.Protected(), controllers.AuthLogout)
+	authRoute.Add("POST", "login", controllers.AuthLogin)
+	authRoute.Add("POST", "register", controllers.AuthRegister)
+	authRoute.Add("GET", "verify", middleware.Protected(), controllers.AuthVerify)
 }

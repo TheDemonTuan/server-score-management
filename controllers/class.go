@@ -8,7 +8,7 @@ import (
 )
 
 // [GET] /api/classes
-func ClassGetList(c *fiber.Ctx) error {
+func ClassGetAll(c *fiber.Ctx) error {
 	var classes []entity.Class
 
 	if err := common.DBConn.Preload("Students").Find(&classes).Error; err != nil {
@@ -56,7 +56,7 @@ func ClassCreate(c *fiber.Ctx) error {
 }
 
 // [PUT] /api/classes/:id
-func ClassUpdate(c *fiber.Ctx) error {
+func ClassUpdateById(c *fiber.Ctx) error {
 	id := c.Params("id")
 	bodyData, err := common.Validator[req.UpdateClass](c)
 
@@ -82,23 +82,23 @@ func ClassUpdate(c *fiber.Ctx) error {
 	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", class))
 }
 
-//// [DELETE] /api/classes/:id
-//func ClassDelete(c *fiber.Ctx) error {
-//	id := c.Params("id")
-//	var class entity.Class
-//
-//	if err := common.DBConn.First(&class, "id = ?", id).Error; err != nil {
-//		return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy lớp")
-//	}
-//
-//	if err := common.DBConn.Delete(&class).Error; err != nil {
-//		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi xóa lớp")
-//	}
-//
-//	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", nil))
-//}
+// [DELETE] /api/classes/:id
+func ClassDeleteById(c *fiber.Ctx) error {
+	id := c.Params("id")
+	var class entity.Class
 
-// [DELETE] /api/classess/all
+	if err := common.DBConn.First(&class, "id = ?", id).Error; err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy lớp")
+	}
+
+	if err := common.DBConn.Delete(&class).Error; err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi xóa lớp")
+	}
+
+	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", nil))
+}
+
+// [DELETE] /api/classess
 func ClassDeleteAll(c *fiber.Ctx) error {
 	if err := common.DBConn.Where("1 = 1").Delete(&entity.Class{}).Error; err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi xóa tất cả lớp")
@@ -107,8 +107,8 @@ func ClassDeleteAll(c *fiber.Ctx) error {
 	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", nil))
 }
 
-// [DELETE] /api/classes
-func ClassDeleteList(c *fiber.Ctx) error {
+// [DELETE] /api/classes/list
+func ClassDeleteByListId(c *fiber.Ctx) error {
 	var ids []string
 
 	if err := c.BodyParser(&ids); err != nil {
