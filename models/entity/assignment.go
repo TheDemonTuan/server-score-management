@@ -5,6 +5,7 @@ import (
 )
 
 type Assignment struct {
+	ID           uint   `json:"id" gorm:"primaryKey;autoIncrement"`
 	SubjectID    string `json:"subject_id" gorm:"not null;size:50;index"`
 	InstructorID string `json:"instructor_id" gorm:"not null;size:25;index"`
 

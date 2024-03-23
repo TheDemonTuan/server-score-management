@@ -11,10 +11,19 @@ import (
 
 // [GET] /api/departments
 func DepartmentGetAll(c *fiber.Ctx) error {
+	isPreload := c.QueryBool("preload", true)
+	selectFields := c.Query("select", "*")
+
 	var departments []entity.Department
 
-	if err := common.DBConn.Preload("Instructors").Preload("Subjects").Preload("Classes").Preload("Students").Find(&departments).Error; err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
+	if isPreload {
+		if err := common.DBConn.Select(selectFields).Preload("Instructors").Preload("Subjects").Preload("Classes").Preload("Students").Find(&departments).Error; err != nil {
+			return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
+		}
+	} else {
+		if err := common.DBConn.Select(selectFields).Find(&departments).Error; err != nil {
+			return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
+		}
 	}
 
 	return c.JSON(common.NewResponse(
@@ -44,16 +53,29 @@ func DepartmentCreate(c *fiber.Ctx) error {
 
 // [GET] /api/departments/:id
 func DepartmentGetById(c *fiber.Ctx) error {
-	id := c.Params("id")
+	departmentId := c.Params("id")
+	isPreload := c.QueryBool("preload", true)
+	selectFields := c.Query("select", "*")
+
 	var department entity.Department
 
-	if err := common.DBConn.Preload("Instructors").
-		Preload("Subjects").Preload("Classes").Preload("Students").
-		First(&department, "id = ?", id).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy khoa")
+	if isPreload {
+		if err := common.DBConn.Select(selectFields).Preload("Instructors").
+			Preload("Subjects").Preload("Classes").Preload("Students").
+			First(&department, "id = ?", departmentId).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy khoa")
+			}
+			return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
 		}
-		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
+	} else {
+		if err := common.DBConn.Select(selectFields).First(&department, "id = ?", departmentId).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy khoa")
+			}
+			return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
+		}
+
 	}
 
 	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", department))

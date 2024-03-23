@@ -74,7 +74,6 @@ func ClassUpdateById(c *fiber.Ctx) error {
 
 	class.Name = bodyData.Name
 	class.MaxStudents = bodyData.MaxStudents
-	class.DepartmentID = bodyData.DepartmentID
 	class.HostInstructorID = bodyData.HostInstructorID
 
 	if err := common.DBConn.Save(&class).Error; err != nil {

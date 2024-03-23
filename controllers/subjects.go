@@ -84,8 +84,8 @@ func SubjectUpdateById(c *fiber.Ctx) error {
 
 	var subject entity.Subject
 
-	id := c.Params("id")
-	if err := common.DBConn.First(&subject, "id = ?", id).Error; err != nil {
+	subjectId := c.Params("id")
+	if err := common.DBConn.First(&subject, "id = ?", subjectId).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy môn học")
 		}
@@ -101,7 +101,6 @@ func SubjectUpdateById(c *fiber.Ctx) error {
 	subject.ProcessPercentage = bodyData.ProcessPercentage
 	subject.MidtermPercentage = bodyData.MidtermPercentage
 	subject.FinalPercentage = bodyData.FinalPercentage
-	subject.DepartmentID = bodyData.DepartmentID
 
 	if err := common.DBConn.Save(&subject).Error; err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi cập nhật môn học")

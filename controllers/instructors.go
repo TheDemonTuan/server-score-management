@@ -21,11 +21,42 @@ func generateInstructorID(departmentID uint) string {
 
 // [GET] /api/instructors
 func InstructorGetAll(c *fiber.Ctx) error {
+	isPreload := c.QueryBool("preload", true)
+	selectFields := c.Query("select", "*")
+
 	var instructors []entity.Instructor
+	if isPreload {
+		if err := common.DBConn.Select(selectFields).Preload("Classes").Preload("Grades").Preload("Assignments").Find(&instructors).Error; err != nil {
+			return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
+		}
+	} else {
+		if err := common.DBConn.Select(selectFields).Find(&instructors).Error; err != nil {
+			return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
+		}
+	}
 
-	if err := common.DBConn.Preload("Classes").Preload("Grades").Preload("Assignments").Find(&instructors).Error; err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
+	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", instructors))
+}
 
+// [GET] /api/instructors/department/:id
+func InstructorGetAllByDepartmentId(c *fiber.Ctx) error {
+	departmentID, departmentIdErr := c.ParamsInt("id")
+	isPreload := c.QueryBool("preload", true)
+	selectFields := c.Query("select", "*")
+
+	if departmentIdErr != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "ID khoa không hợp lệ")
+	}
+
+	var instructors []entity.Instructor
+	if isPreload {
+		if err := common.DBConn.Select(selectFields).Preload("Grades").Preload("Classes").Preload("Assignments").Find(&instructors, "department_id = ?", departmentID).Error; err != nil {
+			return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
+		}
+	} else {
+		if err := common.DBConn.Select(selectFields).Find(&instructors, "department_id = ?", departmentID).Error; err != nil {
+			return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
+		}
 	}
 
 	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", instructors))
@@ -33,10 +64,10 @@ func InstructorGetAll(c *fiber.Ctx) error {
 
 // [GET] /api/instructors/:id
 func InstructorGetById(c *fiber.Ctx) error {
-	id := c.Params("id")
+	instructorId := c.Params("id")
 	var instructor entity.Instructor
 
-	if err := common.DBConn.Preload("Subjects").First(&instructor, "id = ?", id).Error; err != nil {
+	if err := common.DBConn.First(&instructor, "id = ?", instructorId).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy giảng viên")
 		}
@@ -109,20 +140,22 @@ func InstructorUpdateById(c *fiber.Ctx) error {
 
 	var instructor entity.Instructor
 
-	if err := common.DBConn.First(&instructor, "id = ?", instructorID).Error; err != nil {
+	if err := common.DBConn.Preload("Classes").Preload("Grades").First(&instructor, "id = ?", instructorID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy giảng viên")
 		}
 		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
 	}
 
-	if err := common.DBConn.First(&instructor, "id <> ? and email = ? or phone = ?", instructor.ID, bodyData.Email, bodyData.Phone).Error; err != nil {
+	var existInstructor entity.Instructor
+
+	if err := common.DBConn.First(&existInstructor, "id <> ? and (email = ? or phone = ?)", instructor.ID, bodyData.Email, bodyData.Phone).Error; err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
 		}
 	}
 
-	if instructor.ID != "" {
+	if existInstructor.ID != "" {
 		return fiber.NewError(fiber.StatusBadRequest, "Email hoặc số điện thoại đã tồn tại")
 	}
 	//End logic check
@@ -135,7 +168,6 @@ func InstructorUpdateById(c *fiber.Ctx) error {
 	instructor.BirthDay = bodyData.BirthDay
 	instructor.Phone = bodyData.Phone
 	instructor.Gender = bodyData.Gender
-	instructor.DepartmentID = bodyData.DepartmentID
 
 	if err := common.DBConn.Save(&instructor).Error; err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi cập nhật giảng viên")
@@ -189,14 +221,4 @@ func InstructorDeleteAll(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", nil))
-}
-
-// [GET] /api/instructors/department/:departmentID
-func GetInstructionsByDepartmentID(c *fiber.Ctx) error {
-	departmentID := c.Params("departmentID")
-	var instructors []entity.Instructor
-	if err := common.DBConn.Preload("Grades").Preload("Classes").Preload("Assignments").Find(&instructors, "department_id = ?", departmentID).Error; err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
-	}
-	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", instructors))
 }
