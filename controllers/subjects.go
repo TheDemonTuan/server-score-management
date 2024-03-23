@@ -155,3 +155,15 @@ func SubjectDeleteAll(c *fiber.Ctx) error {
 
 	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", nil))
 }
+
+// [GET] /api/subjects/department/:departmentID
+func GetSubjectsByDepartmentID(c *fiber.Ctx) error {
+	departmentID := c.Params("departmentID")
+	var subjects []entity.Subject
+
+	if err := common.DBConn.Preload("Grades").Preload("Assignments").Find(&subjects, "department_id = ?", departmentID).Error; err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
+	}
+
+	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", subjects))
+}

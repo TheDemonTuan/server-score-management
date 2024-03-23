@@ -190,3 +190,13 @@ func InstructorDeleteAll(c *fiber.Ctx) error {
 
 	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", nil))
 }
+
+// [GET] /api/instructors/department/:departmentID
+func GetInstructionsByDepartmentID(c *fiber.Ctx) error {
+	departmentID := c.Params("departmentID")
+	var instructors []entity.Instructor
+	if err := common.DBConn.Preload("Grades").Preload("Classes").Preload("Assignments").Find(&instructors, "department_id = ?", departmentID).Error; err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
+	}
+	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", instructors))
+}

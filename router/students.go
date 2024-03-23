@@ -15,4 +15,5 @@ func studentsRouter(r fiber.Router) {
 	studentsRoute.Add("DELETE", "", controllers.StudentDeleteAll)
 	studentsRoute.Add("DELETE", "list", controllers.StudentDeleteByListId)
 	studentsRoute.Add("DELETE", ":id", controllers.StudentDeleteById)
+	studentsRoute.Add("GET", "department/:departmentID", controllers.GetStudentsByDepartmentID)
 }

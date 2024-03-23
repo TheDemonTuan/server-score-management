@@ -125,3 +125,15 @@ func ClassDeleteByListId(c *fiber.Ctx) error {
 	}
 	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", nil))
 }
+
+// [GET] /api/classes/department/:departmentID
+func GetClassesByDepartmentID(c *fiber.Ctx) error {
+	departmentID := c.Params("departmentID")
+	var classes []entity.Class
+
+	if err := common.DBConn.Preload("Students").Find(&classes, "department_id = ?", departmentID).Error; err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
+	}
+
+	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", classes))
+}

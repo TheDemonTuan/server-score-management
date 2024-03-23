@@ -15,4 +15,5 @@ func classesRouter(r fiber.Router) {
 	classesRoute.Add("DELETE", "", controllers.ClassDeleteAll)
 	classesRoute.Add("DELETE", "list", controllers.ClassDeleteByListId)
 	classesRoute.Add("DELETE", ":id", controllers.ClassDeleteById)
+	classesRoute.Add("GET", "/department/:departmentID", controllers.GetClassesByDepartmentID)
 }
