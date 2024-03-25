@@ -15,12 +15,12 @@ type Instructor struct {
 	Gender    bool      `json:"gender" gorm:"not null"`
 	Degree    string    `json:"degree" gorm:"not null;size:50"`
 
-	DepartmentID uint `json:"department_id" gorm:"not null;index"`
+	DepartmentID uint `json:"department_id" gorm:"not null;size:100;index"`
 
 	CreatedAt time.Time `json:"created_at" gorm:"autoCreateTime"`
 	UpdatedAt time.Time `json:"updated_at" gorm:"autoUpdateTime"`
 
-	Classes     []Class      `json:"classes" gorm:"foreignKey:HostInstructorID"`
-	Grades      []Grade      `json:"grades" gorm:"foreignKey:ByInstructorID"`
-	Assignments []Assignment `json:"assignments" gorm:"foreignKey:InstructorID"`
+	Classes     []Class                `json:"classes" gorm:"foreignKey:HostInstructorID"`
+	Grades      []Grade                `json:"grades" gorm:"foreignKey:ByInstructorID"`
+	Assignments []InstructorAssignment `json:"instructor_assignments" gorm:"foreignKey:InstructorID"`
 }

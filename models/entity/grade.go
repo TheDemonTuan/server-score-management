@@ -10,7 +10,7 @@ type Grade struct {
 	MidtermScore float64 `json:"midterm_score"`
 	FinalScore   float64 `json:"final_score"`
 
-	SubjectID      string `json:"subject_id" gorm:"not null;size:50;index"`
+	SubjectID      string `json:"subject_id" gorm:"not null;size:25;index"`
 	StudentID      string `json:"student_id" gorm:"not null;size:25;index"`
 	ByInstructorID string `json:"by_instructor_id" gorm:"not null;size:25;index"`
 

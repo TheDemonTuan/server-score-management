@@ -15,9 +15,10 @@ func SetupRouter(app *fiber.App) {
 	usersRouter(privateAPIRoute)
 	departmentsRouter(privateAPIRoute)
 	subjectsRouter(privateAPIRoute)
+	classesRouter(privateAPIRoute)
 	instructorsRouter(privateAPIRoute)
 	studentsRouter(privateAPIRoute)
-	classesRouter(privateAPIRoute)
 	gradesRouter(privateAPIRoute)
 	assignmentsRouter(privateAPIRoute)
+	registrationsRouter(privateAPIRoute)
 }

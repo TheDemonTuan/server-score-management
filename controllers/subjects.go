@@ -23,7 +23,7 @@ func SubjectGetAll(c *fiber.Ctx) error {
 
 	var subjects []entity.Subject
 
-	if err := common.DBConn.Preload("Grades").Preload("Assignments").Find(&subjects).Error; err != nil {
+	if err := common.DBConn.Preload("Grades").Preload("StudentRegistrations").Preload("InstructorAssignments").Find(&subjects).Error; err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
 	}
 
@@ -65,7 +65,7 @@ func SubjectGetById(c *fiber.Ctx) error {
 	id := c.Params("id")
 	var subject entity.Subject
 
-	if err := common.DBConn.Preload("Grades").Preload("Assignments").First(&subject, "id = ?", id).Error; err != nil {
+	if err := common.DBConn.Preload("Grades").Preload("StudentRegistrations").Preload("InstructorAssignments").First(&subject, "id = ?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy môn học")
 		}

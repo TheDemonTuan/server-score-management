@@ -23,7 +23,7 @@ func generateStudentId(departmentID uint) string {
 func StudentGetAll(c *fiber.Ctx) error {
 	var students []entity.Student
 
-	if err := common.DBConn.Preload("Grades").Find(&students).Error; err != nil {
+	if err := common.DBConn.Preload("Grades").Preload("Registrations").Find(&students).Error; err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
 	}
 
@@ -35,10 +35,10 @@ func StudentGetAll(c *fiber.Ctx) error {
 
 // [GET] /api/students/:id
 func StudentGetById(c *fiber.Ctx) error {
-	id := c.Params("id")
+	studentId := c.Params("id")
 	var student entity.Student
 
-	if err := common.DBConn.Preload("Grades").First(&student, "id = ?", id).Error; err != nil {
+	if err := common.DBConn.Preload("Grades").Preload("Registrations").First(&student, "id = ?", studentId).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy sinh viên")
 		}
@@ -61,6 +61,21 @@ func StudentCreate(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "Ngày sinh không hợp lệ")
 	}
 
+	nowY := today.Year() % 100
+
+	if bodyData.AcademicYear > nowY {
+		return fiber.NewError(fiber.StatusBadRequest, "Năm học không hợp lệ")
+	}
+
+	var department entity.Department
+
+	if err := common.DBConn.Select("id").First(&department, "id = ?", bodyData.DepartmentID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy khoa")
+		}
+		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
+	}
+
 	var student entity.Student
 
 	if err := common.DBConn.First(&student, "email = ? or phone = ?", bodyData.Email, bodyData.Phone).Error; err != nil {
@@ -81,7 +96,7 @@ func StudentCreate(c *fiber.Ctx) error {
 		BirthDay:     bodyData.BirthDay,
 		Phone:        bodyData.Phone,
 		Gender:       bodyData.Gender,
-		ClassID:      bodyData.ClassID,
+		AcademicYear: bodyData.AcademicYear,
 		DepartmentID: bodyData.DepartmentID,
 	}
 
@@ -132,7 +147,6 @@ func StudentUpdateById(c *fiber.Ctx) error {
 	student.Address = bodyData.Address
 	student.BirthDay = bodyData.BirthDay
 	student.Phone = bodyData.Phone
-	student.ClassID = bodyData.ClassID
 	student.Gender = bodyData.Gender
 
 	student.DepartmentID = bodyData.DepartmentID

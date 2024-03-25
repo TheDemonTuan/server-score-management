@@ -59,7 +59,6 @@ func main() {
 	//}))
 
 	router.SetupRouter(app)
-
 	err := app.Listen(":" + os.Getenv("PORT"))
 	if err != nil {
 		panic(err)

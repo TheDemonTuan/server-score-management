@@ -10,8 +10,8 @@ type StudentCreate struct {
 	BirthDay     time.Time `json:"birth_day" validate:"required"`
 	Phone        string    `json:"phone" validate:"required,max=20"`
 	Gender       bool      `json:"gender" validate:"required,boolean"`
+	AcademicYear int       `json:"academic_year" gorm:"not null,gte=1,lte=99"`
 	DepartmentID uint      `json:"department_id" validate:"required"`
-	ClassID      uint      `json:"class_id" validate:"required"`
 }
 
 type StudentUpdateById struct {
