@@ -29,17 +29,6 @@ func AssignmentCreate(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
-	var assignment entity.InstructorAssignment
-	if err := common.DBConn.First(&assignment, "subject_id = ? AND instructor_id = ?", bodyData.SubjectID, bodyData.InstructorID).Error; err == nil {
-		if !errors.Is(err, gorm.ErrRecordNotFound) {
-			return fiber.NewError(fiber.StatusBadRequest, "Lỗi khi truy vấn cơ sở dữ liệu")
-		}
-	}
-
-	if assignment != (entity.InstructorAssignment{}) {
-		return fiber.NewError(fiber.StatusBadRequest, "Giảng viên đã được phân công môn học này")
-	}
-
 	var subject entity.Subject
 	if err := common.DBConn.First(&subject, "id = ?", bodyData.SubjectID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -58,6 +47,17 @@ func AssignmentCreate(c *fiber.Ctx) error {
 
 	if instructor.DepartmentID != subject.DepartmentID {
 		return fiber.NewError(fiber.StatusBadRequest, "Giảng viên không thuộc khoa của môn học")
+	}
+
+	var assignment entity.InstructorAssignment
+	if err := common.DBConn.First(&assignment, "subject_id = ? AND instructor_id = ?", subject.ID, instructor.ID).Error; err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return fiber.NewError(fiber.StatusBadRequest, "Lỗi khi truy vấn cơ sở dữ liệu")
+		}
+	}
+
+	if assignment.ID != 0 {
+		return fiber.NewError(fiber.StatusBadRequest, "Giảng viên đã được phân công môn học này")
 	}
 
 	newAssignment := entity.InstructorAssignment{
@@ -84,57 +84,80 @@ func AssignmentCreate(c *fiber.Ctx) error {
 //	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", assignment))
 //}
 
-//// [PUT] /api/assignments/:id
-//func AssignmentUpdateById(c *fiber.Ctx) error {
-//	id := c.Params("id")
-//	bodyData, err := common.Validator[req.AssignmentUpdate](c)
-//	if err != nil || bodyData == nil {
-//		return fiber.NewError(fiber.StatusBadRequest, err.Error())
-//	}
-//	var assignment entity.Assignment
-//	if err := common.DBConn.First(&assignment, "id = ?", id).Error; err != nil {
-//		return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy phân công")
-//
-//	}
-//	var subject entity.Subject
-//	if err := common.DBConn.First(&subject, "id = ?", bodyData.SubjectID).Error; err != nil {
-//		return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy môn học")
-//	}
-//
-//	var instructor entity.Instructor
-//	if err := common.DBConn.First(&instructor, "id = ?", bodyData.InstructorID).Error; err != nil {
-//		return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy giảng viên")
-//	}
-//
-//	if instructor.DepartmentID != subject.DepartmentID {
-//		return fiber.NewError(fiber.StatusBadRequest, "Giảng viên không thuộc khoa của môn học")
-//	}
-//
-//	assignment.SubjectID = bodyData.SubjectID
-//	assignment.InstructorID = bodyData.InstructorID
-//
-//	if err := common.DBConn.First(&assignment, "subject_id = ? AND instructor_id = ?", bodyData.SubjectID, bodyData.InstructorID).Error; err == nil {
-//		return fiber.NewError(fiber.StatusBadRequest, "Phân công đã tồn tại")
-//	}
-//	if err := common.DBConn.Save(&assignment).Error; err != nil {
-//		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi cập nhật phân công")
-//	}
-//	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", assignment))
-//}
-//
-//// [DELETE] /api/assignments/:subjectID/:instructorID
-//func AssignmentDeleteById(c *fiber.Ctx) error {
-//	subjectID := c.Params("subjectID")
-//	instructorID := c.Params("instructorID")
-//	var assignment entity.Assignment
-//	if err := common.DBConn.First(&assignment, "subject_id = ? AND instructor_id = ?", subjectID, instructorID).Error; err != nil {
-//		return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy phân công")
-//	}
-//	if err := common.DBConn.Delete(&assignment).Error; err != nil {
-//		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi xóa phân công")
-//	}
-//	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", nil))
-//}
+// // [PUT] /api/assignments/:id
+func AssignmentUpdateById(c *fiber.Ctx) error {
+	assignmentId := c.Params("id")
+	bodyData, err := common.Validator[req.AssignmentUpdateById](c)
+	if err != nil || bodyData == nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+
+	var assignment entity.InstructorAssignment
+	if err := common.DBConn.First(&assignment, "id = ?", assignmentId).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy phân công")
+		}
+		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
+	}
+
+	var subject entity.Subject
+	if err := common.DBConn.First(&subject, "id = ?", bodyData.SubjectID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy môn học")
+		}
+		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
+	}
+
+	var instructor entity.Instructor
+	if err := common.DBConn.First(&instructor, "id = ?", bodyData.InstructorID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy giảng viên")
+		}
+		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
+	}
+
+	if instructor.DepartmentID != subject.DepartmentID {
+		return fiber.NewError(fiber.StatusBadRequest, "Giảng viên không thuộc khoa của môn học")
+	}
+
+	var existAssignment entity.InstructorAssignment
+	if err := common.DBConn.First(&existAssignment, "subject_id = ? AND instructor_id = ?", subject.ID, instructor.ID).Error; err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return fiber.NewError(fiber.StatusBadRequest, "Lỗi khi truy vấn cơ sở dữ liệu")
+		}
+	}
+
+	if existAssignment.ID != 0 {
+		return fiber.NewError(fiber.StatusBadRequest, "Giảng viên đã được phân công môn học này")
+	}
+
+	assignment.SubjectID = subject.ID
+	assignment.InstructorID = instructor.ID
+
+	if err := common.DBConn.Save(&assignment).Error; err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi cập nhật phân công")
+	}
+	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", assignment))
+}
+
+// [DELETE] /api/assignments/:id
+func AssignmentDeleteById(c *fiber.Ctx) error {
+	assignmentId := c.Params("id")
+
+	var assignment entity.InstructorAssignment
+	if err := common.DBConn.First(&assignment, "id = ?", assignmentId).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy phân công")
+		}
+		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
+	}
+
+	if err := common.DBConn.Delete(&assignment).Error; err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi xóa phân công")
+	}
+	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", nil))
+}
+
 //
 //// [DELETE] /api/assignments
 //func AssignmentDeleteAll(c *fiber.Ctx) error {

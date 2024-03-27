@@ -11,12 +11,13 @@ import (
 	"time"
 )
 
-func generateStudentId(departmentID uint) string {
+func generateStudentId(departmentID uint, acdYear int) string {
 	const maxLength = 10
 	const idPrefix = "SV"
 	departmentCode := strconv.Itoa(int(departmentID))
+	acdYearStr := strconv.Itoa(acdYear)
 
-	return idPrefix + departmentCode + common.GenerateRandNum(maxLength-len(idPrefix)-len(departmentCode))
+	return idPrefix + departmentCode + acdYearStr + common.GenerateRandNum(maxLength-len(idPrefix)-len(departmentCode)-len(acdYearStr))
 }
 
 // [GET] /api/students
@@ -83,12 +84,13 @@ func StudentCreate(c *fiber.Ctx) error {
 			return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
 		}
 	}
+
 	if student.ID != "" {
 		return fiber.NewError(fiber.StatusBadRequest, "Email hoặc số điện thoại đã tồn tại")
 	}
 
 	newStudent := entity.Student{
-		ID:           generateStudentId(bodyData.DepartmentID),
+		ID:           generateStudentId(bodyData.DepartmentID, bodyData.AcademicYear),
 		FirstName:    bodyData.FirstName,
 		LastName:     bodyData.LastName,
 		Email:        bodyData.Email,
@@ -100,7 +102,7 @@ func StudentCreate(c *fiber.Ctx) error {
 		DepartmentID: bodyData.DepartmentID,
 	}
 
-	if err := common.DBConn.Create(&newStudent).Error; err != nil {
+	if err := common.DBConn.Omit("class_id").Create(&newStudent).Error; err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi tạo sinh viên")
 	}
 
@@ -117,13 +119,7 @@ func StudentUpdateById(c *fiber.Ctx) error {
 	}
 
 	//Logic check
-	today := time.Now()
-	if bodyData.BirthDay.After(today) {
-		return fiber.NewError(fiber.StatusBadRequest, "Ngày sinh không hợp lệ")
-	}
-
 	var student entity.Student
-
 	if err := common.DBConn.First(&student, "id = ?", studentId).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy sinh viên")
@@ -131,12 +127,18 @@ func StudentUpdateById(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
 	}
 
-	if err := common.DBConn.First(&student, "id <> ? and email = ? or phone = ?", student.ID, bodyData.Email, bodyData.Phone).Error; err != nil {
+	today := time.Now()
+	if bodyData.BirthDay.After(today) {
+		return fiber.NewError(fiber.StatusBadRequest, "Ngày sinh không hợp lệ")
+	}
+
+	var existStudent entity.Student
+	if err := common.DBConn.First(&existStudent, "id <> ? and (email = ? or phone = ?)", student.ID, bodyData.Email, bodyData.Phone).Error; err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
 		}
 	}
-	if student.ID != "" {
+	if existStudent.ID != "" {
 		return fiber.NewError(fiber.StatusBadRequest, "Email hoặc số điện thoại đã tồn tại")
 	}
 	//End logic check
@@ -149,14 +151,11 @@ func StudentUpdateById(c *fiber.Ctx) error {
 	student.Phone = bodyData.Phone
 	student.Gender = bodyData.Gender
 
-	student.DepartmentID = bodyData.DepartmentID
-
-	if err := common.DBConn.Save(&student).Error; err != nil {
+	if err := common.DBConn.Omit("class_id").Save(&student).Error; err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi cập nhật sinh viên")
 	}
 
 	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", student))
-
 }
 
 // [DELETE] /api/student/:id

@@ -8,5 +8,7 @@ import (
 func registrationsRouter(r fiber.Router) {
 	registrationsRoute := r.Group("registrations")
 
-	registrationsRoute.Add("GET", "", controllers.InstructorGetAll)
+	registrationsRoute.Add("GET", "", controllers.RegistrationGetAll)
+	registrationsRoute.Add("POST", "", controllers.RegistrationCreate)
+
 }

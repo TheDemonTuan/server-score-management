@@ -22,5 +22,5 @@ type Instructor struct {
 
 	Classes     []Class                `json:"classes" gorm:"foreignKey:HostInstructorID"`
 	Grades      []Grade                `json:"grades" gorm:"foreignKey:ByInstructorID"`
-	Assignments []InstructorAssignment `json:"instructor_assignments" gorm:"foreignKey:InstructorID"`
+	Assignments []InstructorAssignment `json:"assignments" gorm:"foreignKey:InstructorID"`
 }

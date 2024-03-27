@@ -9,21 +9,19 @@ type StudentCreate struct {
 	Address      string    `json:"address" validate:"required,max=100"`
 	BirthDay     time.Time `json:"birth_day" validate:"required"`
 	Phone        string    `json:"phone" validate:"required,max=20"`
-	Gender       bool      `json:"gender" validate:"required,boolean"`
+	Gender       bool      `json:"gender" validate:"boolean"`
 	AcademicYear int       `json:"academic_year" gorm:"not null,gte=1,lte=99"`
 	DepartmentID uint      `json:"department_id" validate:"required"`
 }
 
 type StudentUpdateById struct {
-	FirstName    string    `json:"first_name" validate:"required,min=3,max=50"`
-	LastName     string    `json:"last_name" validate:"required,min=3,max=50"`
-	Email        string    `json:"email" validate:"required,email,max=100"`
-	Address      string    `json:"address" validate:"required,max=100"`
-	BirthDay     time.Time `json:"birth_day" validate:"required"`
-	Phone        string    `json:"phone" validate:"required,max=20"`
-	Gender       bool      `json:"gender" validate:"required,boolean"`
-	DepartmentID uint      `json:"department_id" validate:"required"`
-	ClassID      uint      `json:"class_id" validate:"required"`
+	FirstName string    `json:"first_name" validate:"required,min=3,max=50"`
+	LastName  string    `json:"last_name" validate:"required,min=3,max=50"`
+	Email     string    `json:"email" validate:"required,email,max=100"`
+	Address   string    `json:"address" validate:"required,max=100"`
+	BirthDay  time.Time `json:"birth_day" validate:"required"`
+	Phone     string    `json:"phone" validate:"required,max=20"`
+	Gender    bool      `json:"gender" validate:"boolean"`
 }
 
 type StudentDeleteByListId struct {

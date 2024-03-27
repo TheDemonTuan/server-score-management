@@ -127,7 +127,6 @@ func InstructorUpdateById(c *fiber.Ctx) error {
 	}
 
 	var instructor entity.Instructor
-
 	if err := common.DBConn.First(&instructor, "id = ?", instructorID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy giảng viên")
@@ -136,7 +135,6 @@ func InstructorUpdateById(c *fiber.Ctx) error {
 	}
 
 	var existInstructor entity.Instructor
-
 	if err := common.DBConn.First(&existInstructor, "id <> ? and (email = ? or phone = ?)", instructor.ID, bodyData.Email, bodyData.Phone).Error; err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
