@@ -15,7 +15,7 @@ type Student struct {
 	AcademicYear int       `json:"academic_year" gorm:"not null"`
 	Gender       bool      `json:"gender" gorm:"not null"`
 
-	ClassID      string `json:"class_id" gorm:"size:25;index"`
+	ClassID      string `json:"class_id" gorm:"not null;size:25;index"`
 	DepartmentID uint   `json:"department_id" gorm:"not null;size:100;index"`
 
 	CreatedAt time.Time `json:"created_at" gorm:"autoCreateTime"`

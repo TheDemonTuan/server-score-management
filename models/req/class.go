@@ -1,12 +1,10 @@
 package req
 
-import "time"
-
 type ClassCreate struct {
-	NumberClass  int       `json:"number_class" validate:"required,number,gte=1,lte=99"`
-	AcademicYear time.Time `json:"academic_year" validate:"required"`
-	MaxStudents  int       `json:"max_students" validate:"required,number,gte=15,lte=60"`
-	DepartmentID uint      `json:"department_id" validate:"required"`
+	NumberClass  int  `json:"number_class" validate:"required,number,gte=1,lte=99"`
+	AcademicYear int  `json:"academic_year" validate:"required"`
+	MaxStudents  int  `json:"max_students" validate:"required,number,gte=15,lte=60"`
+	DepartmentID uint `json:"department_id" validate:"required"`
 }
 
 type ClassUpdateById struct {

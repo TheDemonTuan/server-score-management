@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
+	"net/url"
 	"qldiemsv/common"
 	"qldiemsv/models/entity"
 	"qldiemsv/models/req"
@@ -16,6 +17,53 @@ func AssignmentGetAll(c *fiber.Ctx) error {
 	if err := common.DBConn.Find(&assignments).Error; err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
 	}
+	return c.JSON(common.NewResponse(
+		fiber.StatusOK,
+		"Success",
+		assignments))
+}
+
+// [GET] /api/assignments/department/:id
+func AssignmentGetAllByDepartmentId(c *fiber.Ctx) error {
+	departmentId := c.Params("id")
+
+	var subjectsId []string
+
+	if err := common.DBConn.Model(&entity.Subject{}).Select("id").Where("department_id = ?", departmentId).Find(&subjectsId).Error; err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
+	}
+
+	var assignments []entity.InstructorAssignment
+	if err := common.DBConn.Where("subject_id IN ?", subjectsId).Find(&assignments).Error; err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
+	}
+
+	return c.JSON(common.NewResponse(
+		fiber.StatusOK,
+		"Success",
+		assignments))
+}
+
+// [GET] /api/assignments/department/:id
+func AssignmentGetAllInstructorByFullName(c *fiber.Ctx) error {
+	instructorNameRaw := c.Params("name")
+
+	instructorName, err := url.QueryUnescape(instructorNameRaw)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "Tên giảng viên không hợp lệ")
+	}
+
+	var instructorsId []string
+
+	if err := common.DBConn.Model(&entity.Instructor{}).Select("id").Where("LOWER(CONCAT(first_name,' ',last_name)) LIKE LOWER(?)", "%"+instructorName+"%").Find(&instructorsId).Error; err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
+	}
+
+	var assignments []entity.InstructorAssignment
+	if err := common.DBConn.Where("instructor_id IN ?", instructorsId).Find(&assignments).Error; err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
+	}
+
 	return c.JSON(common.NewResponse(
 		fiber.StatusOK,
 		"Success",
@@ -84,7 +132,7 @@ func AssignmentCreate(c *fiber.Ctx) error {
 //	return c.JSON(common.NewResponse(fiber.StatusOK, "Success", assignment))
 //}
 
-// // [PUT] /api/assignments/:id
+// [PUT] /api/assignments/:id
 func AssignmentUpdateById(c *fiber.Ctx) error {
 	assignmentId := c.Params("id")
 	bodyData, err := common.Validator[req.AssignmentUpdateById](c)

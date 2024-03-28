@@ -9,6 +9,10 @@ func registrationsRouter(r fiber.Router) {
 	registrationsRoute := r.Group("registrations")
 
 	registrationsRoute.Add("GET", "", controllers.RegistrationGetAll)
+	registrationsRoute.Add("GET", "department/:id", controllers.RegistrationGetAllByDepartmentId)
+	registrationsRoute.Add("GET", "student/:name", controllers.AssignmentGetAllInstructorByFullName)
 	registrationsRoute.Add("POST", "", controllers.RegistrationCreate)
+	registrationsRoute.Add("PUT", ":id", controllers.RegistrationUpdateById)
+	registrationsRoute.Add("DELETE", ":id", controllers.RegistrationDeleteById)
 
 }

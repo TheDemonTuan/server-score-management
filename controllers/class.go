@@ -84,8 +84,8 @@ func ClassCreate(c *fiber.Ctx) error {
 	}
 
 	//Logic
-	acdYear := bodyData.AcademicYear.Year() % 100
-	findStr := "D" + strconv.Itoa(acdYear) + "%"
+	acdYear := strconv.Itoa(bodyData.AcademicYear % 100)
+	findStr := "D" + acdYear + "%"
 
 	var classes entity.Class
 	if err := common.DBConn.Order("name desc").Last(&classes, "name like ?", findStr).Error; err != nil {
@@ -104,6 +104,10 @@ func ClassCreate(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi tạo lớp")
 	}
 
+	if startLop > 99 {
+		return fiber.NewError(fiber.StatusBadRequest, "Số lớp đã vượt quá giới hạn")
+	}
+
 	maxLopCount := int(math.Min(float64(startLop+bodyData.NumberClass), 99))
 
 	createLop := func(i int, wg *sync.WaitGroup, chErr chan error) {
@@ -118,7 +122,8 @@ func ClassCreate(c *fiber.Ctx) error {
 
 		newClass := entity.Class{
 			ID:           generateClassID(bodyData.DepartmentID),
-			Name:         "D" + strconv.Itoa(acdYear) + "_" + strings.ToUpper(department.Symbol) + classNumber,
+			Name:         "D" + acdYear + "_" + strings.ToUpper(department.Symbol) + classNumber,
+			AcademicYear: bodyData.AcademicYear,
 			MaxStudents:  bodyData.MaxStudents,
 			DepartmentID: bodyData.DepartmentID,
 		}
@@ -159,8 +164,15 @@ func ClassUpdateById(c *fiber.Ctx) error {
 
 	var class entity.Class
 
-	if err := common.DBConn.First(&class, "id = ?", classId).Error; err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy lớp")
+	if err := common.DBConn.Preload("Students").First(&class, "id = ?", classId).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fiber.NewError(fiber.StatusBadRequest, "Không tìm thấy lớp")
+		}
+		return fiber.NewError(fiber.StatusInternalServerError, "Lỗi khi truy vấn cơ sở dữ liệu")
+	}
+
+	if len(class.Students) > bodyData.MaxStudents {
+		return fiber.NewError(fiber.StatusBadRequest, "Số lượng sinh viên hiện tại lớn hơn số lượng sinh viên tối đa")
 	}
 
 	class.MaxStudents = bodyData.MaxStudents
